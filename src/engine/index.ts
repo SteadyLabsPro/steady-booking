@@ -2,7 +2,12 @@
  * Public surface of the reusable booking engine.
  * Import engine pieces from "@/engine" — never reach into internal files.
  */
-export type { TenantConfig } from "./types";
+export type {
+  TenantConfig,
+  TenantFeature,
+  TenantHero,
+  IconKey,
+} from "./types";
 export type {
   BookingStatus,
   Service,
@@ -15,3 +20,8 @@ export type {
 export { formatPrice } from "./pricing";
 export { needsWaiver } from "./waivers";
 export { bookedSpaces, remainingSpaces, hasCapacity } from "./capacity";
+export {
+  formatSessionDate,
+  formatSessionTime,
+  sessionDateKey,
+} from "./datetime";

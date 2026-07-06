@@ -7,24 +7,28 @@
  * A system font stack keeps the first paint fast with zero font deps.
  */
 @theme {
-  /* Palette: warm neutral canvas + deep spa accent */
-  --color-background: #faf8f5;
-  --color-foreground: #1c1b1a;
-  --color-muted: #6b6864;
-  --color-subtle: #f0ece6;
+  /* Palette: warm cream canvas, espresso accent, terracotta highlight */
+  --color-background: #f7f4ef;
+  --color-foreground: #211f1c;
+  --color-muted: #6f6a62;
+  --color-subtle: #efe9e0;
   --color-surface: #ffffff;
-  --color-border: #e5e0d8;
-  --color-accent: #2f4a4a;
-  --color-accent-foreground: #faf8f5;
+  --color-border: #e7e1d6;
+  --color-accent: #2a2521;
+  --color-accent-foreground: #f7f4ef;
+  --color-highlight: #a5673f;
 
   /* Radius scale */
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1.25rem;
 
-  /* Type */
+  /* Type — Fraunces (display serif) is loaded via next/font in layout.tsx and
+     exposed as --font-fraunces; fall back to a system serif if it is absent. */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
+  --font-serif: var(--font-fraunces, "Iowan Old Style"), Georgia,
+    "Times New Roman", serif;
 }
 
 html {
@@ -37,4 +41,14 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Hide the scrollbar on horizontal scrollers (e.g. the date picker) while
+   keeping the content scrollable/swipeable. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
