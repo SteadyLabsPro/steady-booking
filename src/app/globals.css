@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/**
+ * Design tokens — premium, minimal, mobile-first.
+ * Defined here (Tailwind v4 CSS-first config) so utilities like
+ * `bg-background`, `text-muted`, `rounded-lg` are generated from them.
+ * A system font stack keeps the first paint fast with zero font deps.
+ */
+@theme {
+  /* Palette: warm neutral canvas + deep spa accent */
+  --color-background: #faf8f5;
+  --color-foreground: #1c1b1a;
+  --color-muted: #6b6864;
+  --color-subtle: #f0ece6;
+  --color-border: #e5e0d8;
+  --color-accent: #2f4a4a;
+  --color-accent-foreground: #faf8f5;
+
+  /* Radius scale */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+
+  /* Type */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
