@@ -17,6 +17,21 @@ Each individual session must carry its **own editable price** from day one.
 - Do **not** compute a session's price by joining to a template at read time —
   the session is the source of truth for its own price.
 
+## 1a. Session capacity (max spots + remaining)
+
+Every session has a configurable maximum capacity, and bookings consume spots
+against it.
+
+- `sessions.capacity` is the maximum spots for that session (configurable).
+- A booking consumes `quantity` spots on its session.
+- **Cancelled bookings do not consume capacity.** Never delete a booking to
+  free space — set `booking_status = 'cancelled'` instead. Status is the
+  single source of truth.
+- Remaining spots are **derived, never stored**, so they can't drift:
+  `remaining = capacity − sum(quantity where status <> 'cancelled')`.
+- Exposed by the `session_availability` view (SQL) and the
+  `remainingSpaces()` / `bookedSpaces()` / `hasCapacity()` engine helpers.
+
 ## 2. Waivers (one-time per customer, versioned)
 
 Waivers are signed **once per customer**, not per booking, and are

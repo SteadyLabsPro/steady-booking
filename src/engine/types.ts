@@ -18,4 +18,12 @@ export interface TenantConfig {
   currency: string;
   /** IANA timezone the business operates in, e.g. "Europe/London". */
   timezone: string;
+  /** Waiver policy for this tenant. */
+  waiver: {
+    /**
+     * The currently active waiver version. Customers must have signed this
+     * exact version; bumping it forces everyone to re-sign on next booking.
+     */
+    version: number;
+  };
 }

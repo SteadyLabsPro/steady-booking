@@ -12,4 +12,7 @@ export const tenant: TenantConfig = {
   contactEmail: "hello@thetidehouse.co.uk",
   currency: "GBP",
   timezone: "Europe/London",
+  waiver: {
+    version: 1,
+  },
 };
