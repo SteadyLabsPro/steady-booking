@@ -49,5 +49,13 @@ export const tenant: TenantConfig = {
   ],
   waiver: {
     version: 1,
+    // ⚠️ PLACEHOLDER waiver copy — REPLACE with real legal text before launch.
+    intro:
+      "Placeholder waiver — replace before launch. Please read and accept the following before your session.",
+    declarations: [
+      "I confirm I am in good health and have no medical condition that makes sauna use or cold-water immersion unsafe for me.",
+      "I understand that heat exposure and cold-water immersion carry inherent risks, and I take part entirely at my own risk.",
+      "I agree to follow all staff instructions and the venue's safety guidance during my visit.",
+    ],
   },
 };

@@ -52,6 +52,19 @@ export interface PricingRules {
   sessionPriceMinor: number;
 }
 
+/** Waiver policy and copy for this tenant. */
+export interface TenantWaiver {
+  /**
+   * The currently active waiver version. Customers must have signed this exact
+   * version; bumping it forces everyone to re-sign on their next booking.
+   */
+  version: number;
+  /** Short intro shown above the declarations. */
+  intro: string;
+  /** Required declarations the customer must accept (each a checkbox). */
+  declarations: string[];
+}
+
 /** Marketing content for the landing hero. */
 export interface TenantHero {
   /** Small eyebrow line above the headline. */
@@ -94,12 +107,6 @@ export interface TenantConfig {
   hero: TenantHero;
   /** Highlights shown in the feature strip. */
   features: TenantFeature[];
-  /** Waiver policy for this tenant. */
-  waiver: {
-    /**
-     * The currently active waiver version. Customers must have signed this
-     * exact version; bumping it forces everyone to re-sign on next booking.
-     */
-    version: number;
-  };
+  /** Waiver policy and copy for this tenant. */
+  waiver: TenantWaiver;
 }

@@ -6,6 +6,7 @@ export type {
   TenantConfig,
   TenantFeature,
   TenantHero,
+  TenantWaiver,
   SchedulingRules,
   PricingRules,
   Bundle,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatPrice } from "@/engine";
+import { formatPrice, type TenantWaiver } from "@/engine";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/icons";
@@ -26,16 +26,24 @@ export interface BookingSheetSlot {
 interface BookingSheetProps {
   slot: BookingSheetSlot;
   currency: string;
+  waiver: TenantWaiver;
   onClose: () => void;
 }
 
-type Step = "guests" | "details" | "review";
+type Step = "guests" | "details" | "waiver" | "review";
 
 interface Details {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+}
+
+/** Waiver fields captured client-side (no persistence yet). */
+interface WaiverSignature {
+  version: number;
+  signatureName: string;
+  agreed: boolean[];
 }
 
 const EMPTY_DETAILS: Details = {
@@ -166,13 +174,26 @@ function Field({
   );
 }
 
-export function BookingSheet({ slot, currency, onClose }: BookingSheetProps) {
+export function BookingSheet({
+  slot,
+  currency,
+  waiver,
+  onClose,
+}: BookingSheetProps) {
   const [step, setStep] = useState<Step>("guests");
   const [guests, setGuests] = useState(1);
   const [details, setDetails] = useState<Details>(EMPTY_DETAILS);
   const [errors, setErrors] = useState<Partial<Record<keyof Details, string>>>(
     {},
   );
+  const [agreed, setAgreed] = useState<boolean[]>(() =>
+    waiver.declarations.map(() => false),
+  );
+  const [signatureName, setSignatureName] = useState("");
+  const [waiverError, setWaiverError] = useState<{
+    declarations?: string;
+    signature?: string;
+  }>({});
   const max = Math.max(1, slot.remaining);
 
   // Close on Escape; lock body scroll while open.
@@ -206,15 +227,41 @@ export function BookingSheet({ slot, currency, onClose }: BookingSheetProps) {
     return Object.keys(next).length === 0;
   }
 
+  function validateWaiver(): boolean {
+    const next: { declarations?: string; signature?: string } = {};
+    if (!agreed.every(Boolean))
+      next.declarations = "Please accept all declarations to continue";
+    if (!signatureName.trim())
+      next.signature = "Type your full name to sign";
+    setWaiverError(next);
+    return Object.keys(next).length === 0;
+  }
+
+  const toggleDeclaration = (i: number) => {
+    setAgreed((a) => a.map((v, idx) => (idx === i ? !v : v)));
+    setWaiverError((e) => ({ ...e, declarations: undefined }));
+  };
+
+  // The waiver signature we would persist at Stage 6 (held client-side for now).
+  const waiverSignature: WaiverSignature = {
+    version: waiver.version,
+    signatureName: signatureName.trim(),
+    agreed,
+  };
+
   const goBack = () =>
-    setStep((s) => (s === "review" ? "details" : "guests"));
+    setStep((s) =>
+      s === "review" ? "waiver" : s === "waiver" ? "details" : "guests",
+    );
 
   const title =
     step === "guests"
       ? slot.serviceName
       : step === "details"
         ? "Your details"
-        : "Review";
+        : step === "waiver"
+          ? "Waiver"
+          : "Review";
 
   return (
     <div
@@ -351,6 +398,51 @@ export function BookingSheet({ slot, currency, onClose }: BookingSheetProps) {
             </div>
           )}
 
+          {step === "waiver" && (
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <span className="inline-flex w-fit items-center rounded-md bg-highlight/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-highlight">
+                  Placeholder · replace before launch
+                </span>
+                <p className="text-sm text-muted">{waiver.intro}</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {waiver.declarations.map((declaration, i) => (
+                  <label
+                    key={i}
+                    className="flex items-start gap-3 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={agreed[i]}
+                      onChange={() => toggleDeclaration(i)}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+                    />
+                    <span>{declaration}</span>
+                  </label>
+                ))}
+                {waiverError.declarations && (
+                  <span className="text-xs text-red-600">
+                    {waiverError.declarations}
+                  </span>
+                )}
+              </div>
+
+              <Field
+                id="signature"
+                label="Type your full name to sign"
+                value={signatureName}
+                onChange={(v) => {
+                  setSignatureName(v);
+                  setWaiverError((e) => ({ ...e, signature: undefined }));
+                }}
+                error={waiverError.signature}
+                autoComplete="name"
+              />
+            </div>
+          )}
+
           {step === "review" && (
             <div className="flex flex-col gap-5">
               <BookingSummary slot={slot} guests={guests} currency={currency} />
@@ -364,9 +456,15 @@ export function BookingSheet({ slot, currency, onClose }: BookingSheetProps) {
                   <span>{details.phone}</span>
                 </div>
               </div>
+              <div className="flex flex-col gap-1 text-sm">
+                <p className="font-medium">Waiver</p>
+                <p className="text-muted">
+                  Signed by {waiverSignature.signatureName} (v
+                  {waiverSignature.version})
+                </p>
+              </div>
               <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted">
-                Next: sign the waiver (once) and pay. These arrive in the next
-                stages.
+                Next: payment. Arrives in a later stage.
               </p>
             </div>
           )}
@@ -384,10 +482,21 @@ export function BookingSheet({ slot, currency, onClose }: BookingSheetProps) {
               fullWidth
               size="lg"
               onClick={() => {
-                if (validateDetails()) setStep("review");
+                if (validateDetails()) setStep("waiver");
               }}
             >
               Continue
+            </Button>
+          )}
+          {step === "waiver" && (
+            <Button
+              fullWidth
+              size="lg"
+              onClick={() => {
+                if (validateWaiver()) setStep("review");
+              }}
+            >
+              Agree & continue
             </Button>
           )}
           {step === "review" && (

@@ -165,6 +165,7 @@ export default function BookingPage() {
           slots={slots}
           todayKey={todayKey}
           currency={tenant.currency}
+          waiver={tenant.waiver}
         />
       </main>
 

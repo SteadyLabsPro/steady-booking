@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { TenantWaiver } from "@/engine";
 import { cn } from "@/lib/utils";
 import { Icon, type IconName } from "@/components/icons";
 import { BookingSheet } from "@/components/booking/booking-sheet";
@@ -48,6 +49,8 @@ interface BookingViewProps {
   todayKey: string;
   /** ISO 4217 currency code for totals. */
   currency: string;
+  /** Waiver policy + copy (shown during checkout). */
+  waiver: TenantWaiver;
   locale?: string;
 }
 
@@ -146,6 +149,7 @@ export function BookingView({
   slots,
   todayKey,
   currency,
+  waiver,
   locale = "en-GB",
 }: BookingViewProps) {
   const [selectedSlot, setSelectedSlot] = useState<SlotView | null>(null);
@@ -318,6 +322,7 @@ export function BookingView({
             remaining: selectedSlot.remaining,
           }}
           currency={currency}
+          waiver={waiver}
           onClose={() => setSelectedSlot(null)}
         />
       )}
