@@ -6,6 +6,9 @@ export type {
   TenantConfig,
   TenantFeature,
   TenantHero,
+  SchedulingRules,
+  PricingRules,
+  Bundle,
   IconKey,
 } from "./types";
 export type {
@@ -24,4 +27,12 @@ export {
   formatSessionDate,
   formatSessionTime,
   sessionDateKey,
+  addDaysKey,
+  dayKeyWeekday,
+  zonedTimeToUtcISO,
 } from "./datetime";
+export {
+  slotStartTimes,
+  slotCadenceMinutes,
+  activeDayKeys,
+} from "./scheduling";

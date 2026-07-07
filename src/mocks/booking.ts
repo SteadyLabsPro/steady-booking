@@ -1,125 +1,99 @@
 import type { Service, Session, Booking } from "@/engine";
+import { slotStartTimes, activeDayKeys, zonedTimeToUtcISO } from "@/engine";
+import { tenant } from "@/config/tenant.config";
 
 /**
- * Mock, schema-shaped data for the Stage 4 booking screen. There is no backend
- * yet — these objects match the engine domain contracts exactly, so swapping
- * them for real Supabase reads later is a drop-in change.
+ * Mock, schema-shaped data for the booking screen. There is no backend yet, but
+ * sessions are GENERATED from the tenant's scheduling/pricing/capacity rules —
+ * no hard-coded hours, prices, or capacities. Swapping this for real Supabase
+ * reads (and the Stage 6 slot generator seeded from the same rules) is a
+ * drop-in change.
  *
- * Times are stored in UTC (as Supabase would return them); the UI renders them
- * in the tenant timezone (Europe/London = BST/UTC+1 in July). Sessions are set
- * on the two days after the reference "today" (2026-07-06) so the default view
- * has content.
+ * Times are stored as UTC ISO strings (as Supabase would return them); the UI
+ * renders them in the tenant timezone.
  */
 
 const STAMP = "2026-07-06T12:00:00.000Z";
+const DAYS_AHEAD = 14;
 
-export const MOCK_SERVICES: Service[] = [
-  {
-    id: "svc_sauna_plunge",
-    name: "Sauna & Cold Plunge",
-    description: "Wood-fired sauna and sea-cold plunge.",
-    durationMinutes: 60,
-    isActive: true,
-    createdAt: STAMP,
-    updatedAt: STAMP,
-  },
-  {
-    id: "svc_private",
-    name: "Private Sauna Hire",
-    description: "The whole cabin to yourself and up to three guests.",
-    durationMinutes: 90,
-    isActive: false, // Shelved for now — flip to true to bring it back.
-    createdAt: STAMP,
-    updatedAt: STAMP,
-  },
-];
+/** The single active service. Its length comes from the scheduling rules. */
+export const MOCK_SERVICE: Service = {
+  id: "svc_sauna_plunge",
+  name: "Sauna & Cold Plunge",
+  description: "Traditional Finnish sauna and ice-cold plunge.",
+  durationMinutes: tenant.scheduling.slotMinutes,
+  isActive: true,
+  createdAt: STAMP,
+  updatedAt: STAMP,
+};
 
-export const MOCK_SESSIONS: Session[] = [
-  // --- Tomorrow (Tue 7 Jul) — the default-selected day ---
-  {
-    id: "sess_a1",
-    serviceId: "svc_sauna_plunge",
-    startsAt: "2026-07-07T08:30:00.000Z", // 09:30 BST
-    capacity: 8,
-    priceMinor: 1800,
-    isActive: true,
-    createdAt: STAMP,
-    updatedAt: STAMP,
-  },
-  {
-    id: "sess_a2",
-    serviceId: "svc_sauna_plunge",
-    startsAt: "2026-07-07T17:30:00.000Z", // 18:30 BST
-    capacity: 8,
-    priceMinor: 2200,
-    isActive: true,
-    createdAt: STAMP,
-    updatedAt: STAMP,
-  },
-  {
-    id: "sess_a3",
-    serviceId: "svc_sauna_plunge",
-    startsAt: "2026-07-07T18:00:00.000Z", // 19:00 BST
-    capacity: 8,
-    priceMinor: 2200,
-    isActive: true,
-    createdAt: STAMP,
-    updatedAt: STAMP,
-  },
-  {
-    id: "sess_b1",
-    serviceId: "svc_private",
-    startsAt: "2026-07-07T07:00:00.000Z", // 08:00 BST
-    capacity: 4,
-    priceMinor: 5500,
-    isActive: true,
-    createdAt: STAMP,
-    updatedAt: STAMP,
-  },
-  // --- Day after (Wed 8 Jul) — gives the scroller a second active day ---
-  {
-    id: "sess_a4",
-    serviceId: "svc_sauna_plunge",
-    startsAt: "2026-07-08T08:30:00.000Z", // 09:30 BST
-    capacity: 8,
-    priceMinor: 1800,
-    isActive: true,
-    createdAt: STAMP,
-    updatedAt: STAMP,
-  },
-  {
-    id: "sess_b2",
-    serviceId: "svc_private",
-    startsAt: "2026-07-08T07:00:00.000Z", // 08:00 BST
-    capacity: 4,
-    priceMinor: 5500,
-    isActive: true,
-    createdAt: STAMP,
-    updatedAt: STAMP,
-  },
-];
+/** Slot times (e.g. "18:00") flagged as popular — presentation only. */
+export const POPULAR_SLOT_TIMES = new Set<string>(["18:00"]);
+
+type DemoBooking = Pick<Booking, "sessionId" | "quantity" | "status">;
+
+function slotId(dateKey: string, time: string): string {
+  return `${MOCK_SERVICE.id}_${dateKey}_${time.replace(":", "")}`;
+}
 
 /**
- * Bookings that consume capacity. Cancelled bookings are included on purpose to
- * prove they do NOT consume a spot (see sess_a2).
- * - sess_a1: 7 booked        → only 1 of 8 left
- * - sess_a2: 3 + 2 = 5       → 3 of 8 left (cancelled 2 ignored)
- * - sess_a3: 8 booked        → fully booked
- * - sess_b1: 0 booked        → 4 of 4 left
- * - sess_a4: 3 booked        → 5 of 8 left
- * - sess_b2: 0 booked        → 4 of 4 left
+ * Build the mock catalogue relative to `todayKey`, generated entirely from
+ * config. A little demo occupancy on the first open day gives the UI variety
+ * (a full slot, a nearly-full slot, and a partly-booked slot).
  */
-export const MOCK_BOOKINGS: Pick<
-  Booking,
-  "sessionId" | "quantity" | "status"
->[] = [
-  { sessionId: "sess_a1", quantity: 7, status: "confirmed" },
-  { sessionId: "sess_a2", quantity: 3, status: "confirmed" },
-  { sessionId: "sess_a2", quantity: 2, status: "pending" },
-  { sessionId: "sess_a2", quantity: 2, status: "cancelled" },
-  { sessionId: "sess_a3", quantity: 8, status: "confirmed" },
-  { sessionId: "sess_a4", quantity: 3, status: "confirmed" },
-];
+export function buildMockBooking(todayKey: string): {
+  service: Service;
+  sessions: Session[];
+  bookings: DemoBooking[];
+} {
+  const times = slotStartTimes(tenant.scheduling);
+  const days = activeDayKeys(todayKey, DAYS_AHEAD, tenant.scheduling);
+  const capacity = tenant.defaultCapacity;
+  const priceMinor = tenant.pricing.sessionPriceMinor;
 
-/** View-only: sessions flagged as popular (not part of the schema). */
-export const POPULAR_SESSION_IDS = new Set<string>(["sess_a1"]);
+  const sessions: Session[] = [];
+  for (const dateKey of days) {
+    for (const time of times) {
+      sessions.push({
+        id: slotId(dateKey, time),
+        serviceId: MOCK_SERVICE.id,
+        startsAt: zonedTimeToUtcISO(dateKey, time, tenant.timezone),
+        capacity,
+        priceMinor,
+        isActive: true,
+        createdAt: STAMP,
+        updatedAt: STAMP,
+      });
+    }
+  }
+
+  // Demo occupancy on the first open day: slot 1 full, slot 2 nearly full,
+  // slot 4 partly booked. A cancelled booking proves it doesn't consume a spot.
+  const bookings: DemoBooking[] = [];
+  const firstDay = days[0];
+  if (firstDay) {
+    const occupancy: Record<number, number> = {
+      1: capacity, // fully booked
+      2: capacity - 1, // only 1 left
+      4: 3, // a few left
+    };
+    for (const [idx, booked] of Object.entries(occupancy)) {
+      const time = times[Number(idx)];
+      if (!time || booked <= 0) continue;
+      bookings.push({
+        sessionId: slotId(firstDay, time),
+        quantity: booked,
+        status: "confirmed",
+      });
+    }
+    if (times[2]) {
+      bookings.push({
+        sessionId: slotId(firstDay, times[2]),
+        quantity: 2,
+        status: "cancelled",
+      });
+    }
+  }
+
+  return { service: MOCK_SERVICE, sessions, bookings };
+}

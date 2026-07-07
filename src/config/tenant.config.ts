@@ -13,12 +13,31 @@ export const tenant: TenantConfig = {
   contactEmail: "hello@thetidehouse.co.uk",
   currency: "GBP",
   timezone: "Europe/London",
+  scheduling: {
+    openTime: "06:00",
+    lastSlotTime: "21:00",
+    slotMinutes: 45,
+    turnaroundMinutes: 15,
+    daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // 7 days a week
+  },
+  defaultCapacity: 6,
+  pricing: {
+    sessionPriceMinor: 1000, // £10 PAYGO per session
+  },
+  bundles: [
+    {
+      id: "block10",
+      label: "10-session block",
+      sessions: 10,
+      priceMinor: 8000, // £80
+    },
+  ],
   hero: {
     eyebrow: "Sauna · Cold Plunge · Contrast Therapy",
     headline: "Recover Faster.",
     tagline: "Perform better. Sleep deeper. Feel stronger.",
     subcopy:
-      "Traditional Finnish sauna and ice-cold plunge tubs located inside Advantage Padel, Mudeford. From £12 per person.",
+      "Traditional Finnish sauna and ice-cold plunge tubs located inside Advantage Padel, Mudeford. From £10 per person.",
     ctaLabel: "Book your session",
     // Drop a photo at /public/hero.jpg and set: image: "/hero.jpg"
   },

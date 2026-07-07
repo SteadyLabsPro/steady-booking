@@ -44,7 +44,33 @@ Waivers are signed **once per customer**, not per booking, and are
   waiver **or** their latest signed version ≠ the active version.
 - Do **not** attach waivers to the booking/session row.
 
+## 3. Business rules come from config, not code
+
+All business rules — opening hours, slot length, turnaround, capacity, pricing,
+and bundles — live in `tenant.config.ts` (or, later, the database), never
+hard-coded. Slots are generated from `scheduling` rules via the engine
+(`slotStartTimes` / `activeDayKeys`). In Stage 6 the same rules seed real
+`sessions` rows, where per-session price/capacity can still be overridden.
+
+The Tide House launch rules: one service (Sauna & Cold Plunge), 45-min sessions
++ 15-min turnaround (hourly slots), capacity 6, 7 days/week, 06:00–21:00, £10
+PAYGO.
+
+## 4. Passes / block offer (build after PAYGO core)
+
+The "10 sessions for £80" offer is a **prepaid pass**: pay £80 → 10 credits →
+book sessions over time, each redeeming 1 credit, identified by email (no
+accounts). Bundles are defined in `tenant.config.ts` (`bundles`).
+
+Stage 6 schema must be **pass-ready**:
+
+- a `passes` table (e.g. `customer_id`, `total_credits`, `remaining_credits`,
+  `price_paid_minor`, `bundle_id`), and
+- a nullable `pass_id` on `bookings`; a pass-redeemed booking records £0 and
+  decrements a credit.
+
 ---
 
 _These map to project memory: variable-per-session-pricing,
-versioned-per-customer-waivers._
+versioned-per-customer-waivers, session-capacity, sauna-service-rules,
+block-pass-offer, all-business-rules-from-config._

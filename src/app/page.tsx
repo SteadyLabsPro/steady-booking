@@ -1,16 +1,12 @@
 import { tenant } from "@/config/tenant.config";
 import {
   formatPrice,
+  formatSessionDate,
   formatSessionTime,
   sessionDateKey,
   remainingSpaces,
 } from "@/engine";
-import {
-  MOCK_SERVICES,
-  MOCK_SESSIONS,
-  MOCK_BOOKINGS,
-  POPULAR_SESSION_IDS,
-} from "@/mocks/booking";
+import { buildMockBooking, POPULAR_SLOT_TIMES } from "@/mocks/booking";
 import { cn } from "@/lib/utils";
 import { Icon, type IconName } from "@/components/icons";
 import {
@@ -33,7 +29,6 @@ const BOUNDS = "mx-auto w-full max-w-6xl px-5 sm:px-8";
 // Presentation-only: which icon represents each service (kept out of the schema).
 const SERVICE_ICONS: Record<string, IconName> = {
   svc_sauna_plunge: "sauna",
-  svc_private: "private",
 };
 
 function Wordmark() {
@@ -114,32 +109,40 @@ function Hero() {
 export default function BookingPage() {
   const todayKey = sessionDateKey(new Date().toISOString(), tenant.timezone);
 
+  // Sessions are generated from the tenant's config rules (see mocks/booking).
+  const { service, sessions, bookings } = buildMockBooking(todayKey);
+
   // Only active services (and their active sessions) are shown to customers.
-  const activeServices = MOCK_SERVICES.filter((service) => service.isActive);
-  const activeServiceIds = new Set(activeServices.map((service) => service.id));
+  const activeServices = [service].filter((s) => s.isActive);
+  const activeServiceIds = new Set(activeServices.map((s) => s.id));
 
-  const services: ServiceView[] = activeServices.map((service) => ({
-    id: service.id,
-    name: service.name,
-    durationMinutes: service.durationMinutes,
-    description: service.description,
-    icon: SERVICE_ICONS[service.id] ?? "sauna",
+  const services: ServiceView[] = activeServices.map((s) => ({
+    id: s.id,
+    name: s.name,
+    durationMinutes: s.durationMinutes,
+    description: s.description,
+    icon: SERVICE_ICONS[s.id] ?? "sauna",
   }));
 
-  const slots: SlotView[] = MOCK_SESSIONS.filter(
-    (session) => session.isActive && activeServiceIds.has(session.serviceId),
-  ).map((session) => ({
-    id: session.id,
-    serviceId: session.serviceId,
-    dateKey: sessionDateKey(session.startsAt, tenant.timezone),
-    time: formatSessionTime(session.startsAt, tenant.timezone),
-    price: formatPrice(session.priceMinor, tenant.currency),
-    remaining: remainingSpaces(
-      session.capacity,
-      MOCK_BOOKINGS.filter((b) => b.sessionId === session.id),
-    ),
-    popular: POPULAR_SESSION_IDS.has(session.id),
-  }));
+  const slots: SlotView[] = sessions
+    .filter((s) => s.isActive && activeServiceIds.has(s.serviceId))
+    .map((s) => {
+      const time = formatSessionTime(s.startsAt, tenant.timezone);
+      return {
+        id: s.id,
+        serviceId: s.serviceId,
+        dateKey: sessionDateKey(s.startsAt, tenant.timezone),
+        dateLabel: formatSessionDate(s.startsAt, tenant.timezone),
+        time,
+        price: formatPrice(s.priceMinor, tenant.currency),
+        priceMinor: s.priceMinor,
+        remaining: remainingSpaces(
+          s.capacity,
+          bookings.filter((b) => b.sessionId === s.id),
+        ),
+        popular: POPULAR_SLOT_TIMES.has(time),
+      };
+    });
 
   return (
     <div className="flex min-h-dvh flex-col pb-24 md:pb-0">
@@ -157,7 +160,12 @@ export default function BookingPage() {
       <Hero />
 
       <main className="flex-1">
-        <BookingView services={services} slots={slots} todayKey={todayKey} />
+        <BookingView
+          services={services}
+          slots={slots}
+          todayKey={todayKey}
+          currency={tenant.currency}
+        />
       </main>
 
       <FeatureStrip features={tenant.features} />

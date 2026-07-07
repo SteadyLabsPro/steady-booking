@@ -19,6 +19,39 @@ export interface TenantFeature {
   icon: IconKey;
 }
 
+/**
+ * Scheduling rules that define the slot grid. Slots are generated from these,
+ * never hard-coded. Times are wall-clock "HH:MM" in the tenant timezone.
+ */
+export interface SchedulingRules {
+  /** First slot start, e.g. "06:00". */
+  openTime: string;
+  /** Latest slot start, e.g. "21:00". */
+  lastSlotTime: string;
+  /** Session length in minutes, e.g. 45. */
+  slotMinutes: number;
+  /** Turnaround/buffer after each session in minutes, e.g. 15. */
+  turnaroundMinutes: number;
+  /** Active days of the week (0 = Sunday … 6 = Saturday). */
+  daysOfWeek: number[];
+}
+
+/** A prepaid bundle / block offer (e.g. 10 sessions for £80). */
+export interface Bundle {
+  id: string;
+  label: string;
+  /** Number of sessions/credits included. */
+  sessions: number;
+  /** Total price in integer minor units. */
+  priceMinor: number;
+}
+
+/** Pricing rules. Per-session prices live on sessions; this is the default. */
+export interface PricingRules {
+  /** Default pay-as-you-go price per session, in minor units. */
+  sessionPriceMinor: number;
+}
+
 /** Marketing content for the landing hero. */
 export interface TenantHero {
   /** Small eyebrow line above the headline. */
@@ -49,6 +82,14 @@ export interface TenantConfig {
   currency: string;
   /** IANA timezone the business operates in, e.g. "Europe/London". */
   timezone: string;
+  /** Slot-grid scheduling rules. */
+  scheduling: SchedulingRules;
+  /** Default max capacity per session (per-session values can override in DB). */
+  defaultCapacity: number;
+  /** Pricing rules. */
+  pricing: PricingRules;
+  /** Prepaid bundle / block offers. */
+  bundles: Bundle[];
   /** Landing hero content. */
   hero: TenantHero;
   /** Highlights shown in the feature strip. */
