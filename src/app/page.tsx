@@ -4,11 +4,10 @@ import {
   formatSessionDate,
   formatSessionTime,
   sessionDateKey,
-  remainingSpaces,
 } from "@/engine";
-import { buildMockBooking, POPULAR_SLOT_TIMES } from "@/mocks/booking";
+import { getAvailability } from "@/lib/supabase/availability";
 import { cn } from "@/lib/utils";
-import { Icon, type IconName } from "@/components/icons";
+import { Icon } from "@/components/icons";
 import {
   BookingView,
   type SlotView,
@@ -17,19 +16,18 @@ import {
 import { FeatureStrip } from "@/components/booking/feature-strip";
 
 /**
- * Public booking screen (Stage 4). Editorial landing + date-first booking flow,
- * built from mock, schema-shaped data — no Supabase, Stripe, or waiver yet.
- * The server does all engine work and hands the client view ready-to-render
- * models. Rendered per request so "Today" reflects the viewer's current date.
+ * Public booking screen. Editorial landing + date-first booking flow. Reads
+ * real availability from Supabase (server-side, service role) and hands the
+ * client view ready-to-render models. Rendered per request so "Today" reflects
+ * the viewer's current date.
  */
 export const dynamic = "force-dynamic";
 
 const BOUNDS = "mx-auto w-full max-w-6xl px-5 sm:px-8";
+const AVAILABILITY_WINDOW_DAYS = 14;
 
-// Presentation-only: which icon represents each service (kept out of the schema).
-const SERVICE_ICONS: Record<string, IconName> = {
-  svc_sauna_plunge: "sauna",
-};
+// Presentation-only: slot times flagged as popular.
+const POPULAR_SLOT_TIMES = new Set<string>(["18:00"]);
 
 function Wordmark() {
   return (
@@ -106,26 +104,25 @@ function Hero() {
   );
 }
 
-export default function BookingPage() {
+export default async function BookingPage() {
   const todayKey = sessionDateKey(new Date().toISOString(), tenant.timezone);
 
-  // Sessions are generated from the tenant's config rules (see mocks/booking).
-  const { service, sessions, bookings } = buildMockBooking(todayKey);
+  // Real availability from Supabase (server-side, service role).
+  const { services: dbServices, sessions, remainingBySession } =
+    await getAvailability(todayKey, AVAILABILITY_WINDOW_DAYS);
 
-  // Only active services (and their active sessions) are shown to customers.
-  const activeServices = [service].filter((s) => s.isActive);
-  const activeServiceIds = new Set(activeServices.map((s) => s.id));
+  const activeServiceIds = new Set(dbServices.map((s) => s.id));
 
-  const services: ServiceView[] = activeServices.map((s) => ({
+  const services: ServiceView[] = dbServices.map((s) => ({
     id: s.id,
     name: s.name,
     durationMinutes: s.durationMinutes,
     description: s.description,
-    icon: SERVICE_ICONS[s.id] ?? "sauna",
+    icon: "sauna", // single service in the MVP; per-service icons can come later
   }));
 
   const slots: SlotView[] = sessions
-    .filter((s) => s.isActive && activeServiceIds.has(s.serviceId))
+    .filter((s) => activeServiceIds.has(s.serviceId))
     .map((s) => {
       const time = formatSessionTime(s.startsAt, tenant.timezone);
       return {
@@ -136,10 +133,7 @@ export default function BookingPage() {
         time,
         price: formatPrice(s.priceMinor, tenant.currency),
         priceMinor: s.priceMinor,
-        remaining: remainingSpaces(
-          s.capacity,
-          bookings.filter((b) => b.sessionId === s.id),
-        ),
+        remaining: remainingBySession[s.id] ?? s.capacity,
         popular: POPULAR_SLOT_TIMES.has(time),
       };
     });
