@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Icon, type IconName } from "@/components/icons";
+import { BookingSheet } from "@/components/booking/booking-sheet";
 
 /**
  * Interactive booking view: a horizontal date scroller with a day-at-a-time
@@ -28,10 +29,14 @@ export interface SlotView {
   serviceId: string;
   /** yyyy-mm-dd in the tenant timezone. */
   dateKey: string;
+  /** e.g. "Tue 7 Jul". */
+  dateLabel: string;
   /** e.g. "07:00". */
   time: string;
   /** e.g. "£18.00". */
   price: string;
+  /** Unit price in minor units, for computing totals. */
+  priceMinor: number;
   remaining: number;
   popular: boolean;
 }
@@ -41,6 +46,8 @@ interface BookingViewProps {
   slots: SlotView[];
   /** Today's yyyy-mm-dd in the tenant timezone (computed server-side). */
   todayKey: string;
+  /** ISO 4217 currency code for totals. */
+  currency: string;
   locale?: string;
 }
 
@@ -78,13 +85,29 @@ function RemainingBadge({ remaining }: { remaining: number }) {
   return <span className="text-sm text-muted">{remaining} spaces left</span>;
 }
 
-function SlotCard({ slot }: { slot: SlotView }) {
+function SlotCard({
+  slot,
+  onSelect,
+}: {
+  slot: SlotView;
+  onSelect: (slot: SlotView) => void;
+}) {
   const soldOut = slot.remaining === 0;
+  const open = () => {
+    if (!soldOut) onSelect(slot);
+  };
   return (
     <div
       role="button"
       tabIndex={soldOut ? -1 : 0}
       aria-disabled={soldOut}
+      onClick={open}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          open();
+        }
+      }}
       className={cn(
         "flex flex-col justify-between gap-3 rounded-xl border border-border bg-surface p-4 transition-colors",
         soldOut
@@ -122,8 +145,15 @@ export function BookingView({
   services,
   slots,
   todayKey,
+  currency,
   locale = "en-GB",
 }: BookingViewProps) {
+  const [selectedSlot, setSelectedSlot] = useState<SlotView | null>(null);
+  const serviceNameById = useMemo(
+    () => new Map(services.map((s) => [s.id, s.name])),
+    [services],
+  );
+
   const tomorrowKey = useMemo(() => addDaysKey(todayKey, 1), [todayKey]);
 
   const dateKeys = useMemo(
@@ -264,7 +294,11 @@ export function BookingView({
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {groupSlots.map((slot) => (
-                    <SlotCard key={slot.id} slot={slot} />
+                    <SlotCard
+                      key={slot.id}
+                      slot={slot}
+                      onSelect={setSelectedSlot}
+                    />
                   ))}
                 </div>
               </div>
@@ -272,6 +306,21 @@ export function BookingView({
           )}
         </div>
       </div>
+
+      {selectedSlot && (
+        <BookingSheet
+          slot={{
+            id: selectedSlot.id,
+            serviceName: serviceNameById.get(selectedSlot.serviceId) ?? "",
+            dateLabel: selectedSlot.dateLabel,
+            time: selectedSlot.time,
+            priceMinor: selectedSlot.priceMinor,
+            remaining: selectedSlot.remaining,
+          }}
+          currency={currency}
+          onClose={() => setSelectedSlot(null)}
+        />
+      )}
     </section>
   );
 }
