@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/icons";
 import { createBooking } from "@/lib/actions/create-booking";
+import { checkWaiverNeeded } from "@/lib/actions/check-waiver";
 
 /**
  * Booking sheet — the step-based flow that opens when a slot is selected.
@@ -198,6 +199,8 @@ export function BookingSheet({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [bookingRef, setBookingRef] = useState<string | null>(null);
+  const [checkingWaiver, setCheckingWaiver] = useState(false);
+  const [waiverAlreadySigned, setWaiverAlreadySigned] = useState(false);
   const max = Math.max(1, slot.remaining);
 
   // Close on Escape; lock body scroll while open.
@@ -253,9 +256,32 @@ export function BookingSheet({
     agreed,
   };
 
+  // From details: skip the waiver step if this email already signed the active
+  // version (one-time per customer); otherwise show it.
+  async function continueFromDetails() {
+    if (!validateDetails()) return;
+    setCheckingWaiver(true);
+    try {
+      const { needsWaiver } = await checkWaiverNeeded(details.email);
+      setWaiverAlreadySigned(!needsWaiver);
+      setStep(needsWaiver ? "waiver" : "review");
+    } catch {
+      setWaiverAlreadySigned(false);
+      setStep("waiver");
+    } finally {
+      setCheckingWaiver(false);
+    }
+  }
+
   const goBack = () =>
     setStep((s) =>
-      s === "review" ? "waiver" : s === "waiver" ? "details" : "guests",
+      s === "review"
+        ? waiverAlreadySigned
+          ? "details"
+          : "waiver"
+        : s === "waiver"
+          ? "details"
+          : "guests",
     );
 
   // "Proceed to payment": create a real pending booking (atomic capacity check
@@ -497,8 +523,9 @@ export function BookingSheet({
               <div className="flex flex-col gap-1 text-sm">
                 <p className="font-medium">Waiver</p>
                 <p className="text-muted">
-                  Signed by {waiverSignature.signatureName} (v
-                  {waiverSignature.version})
+                  {waiverAlreadySigned
+                    ? `Already on file (v${waiver.version})`
+                    : `Signed by ${waiverSignature.signatureName} (v${waiverSignature.version})`}
                 </p>
               </div>
             </div>
@@ -550,11 +577,10 @@ export function BookingSheet({
             <Button
               fullWidth
               size="lg"
-              onClick={() => {
-                if (validateDetails()) setStep("waiver");
-              }}
+              onClick={continueFromDetails}
+              disabled={checkingWaiver}
             >
-              Continue
+              {checkingWaiver ? "Checking…" : "Continue"}
             </Button>
           )}
           {step === "waiver" && (
