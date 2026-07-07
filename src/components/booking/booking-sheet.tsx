@@ -5,6 +5,7 @@ import { formatPrice, type TenantWaiver } from "@/engine";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/icons";
+import { createBooking } from "@/lib/actions/create-booking";
 
 /**
  * Booking sheet — the step-based flow that opens when a slot is selected.
@@ -39,25 +40,11 @@ interface Details {
   phone: string;
 }
 
-/** Waiver fields captured client-side (no persistence yet). */
+/** Waiver fields captured client-side, mirrored to the DB on submit. */
 interface WaiverSignature {
   version: number;
   signatureName: string;
   agreed: boolean[];
-}
-
-/**
- * The complete booking payload assembled at "Proceed to payment". This is the
- * shape Stage 6/7 will send to Supabase + Stripe — assembled here so the
- * handoff point is real even though payment/persistence are stubbed.
- */
-interface BookingDraft {
-  sessionId: string;
-  guests: number;
-  unitPriceMinor: number;
-  totalMinor: number;
-  customer: Details;
-  waiver: WaiverSignature & { signedAt: string };
 }
 
 const EMPTY_DETAILS: Details = {
@@ -208,6 +195,9 @@ export function BookingSheet({
     declarations?: string;
     signature?: string;
   }>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [bookingRef, setBookingRef] = useState<string | null>(null);
   const max = Math.max(1, slot.remaining);
 
   // Close on Escape; lock body scroll while open.
@@ -268,20 +258,36 @@ export function BookingSheet({
       s === "review" ? "waiver" : s === "waiver" ? "details" : "guests",
     );
 
-  // "Proceed to payment": assemble the full payload and hand off. Payment and
-  // persistence are stubbed until the Stripe/Supabase stages.
-  function proceedToPayment() {
-    const draft: BookingDraft = {
+  // "Proceed to payment": create a real pending booking (atomic capacity check
+  // in the DB). Payment (Stripe) still comes in a later stage.
+  async function proceedToPayment() {
+    setSubmitting(true);
+    setSubmitError(null);
+    const result = await createBooking({
       sessionId: slot.id,
       guests,
-      unitPriceMinor: slot.priceMinor,
-      totalMinor: slot.priceMinor * guests,
-      customer: { ...details },
-      waiver: { ...waiverSignature, signedAt: new Date().toISOString() },
-    };
-    // The payload Stage 6/7 will send to Supabase + Stripe.
-    console.info("[booking draft]", draft);
-    setStep("confirmation");
+      firstName: details.firstName,
+      lastName: details.lastName,
+      email: details.email,
+      phone: details.phone,
+      signatureName: signatureName.trim() || null,
+    });
+    setSubmitting(false);
+
+    if (result.ok) {
+      setBookingRef(result.bookingId);
+      setStep("confirmation");
+      return;
+    }
+    if (result.reason === "sold_out") {
+      setSubmitError(
+        "Sorry — that slot just filled up. Please go back and choose another time.",
+      );
+    } else if (result.reason === "session_unavailable") {
+      setSubmitError("That session is no longer available. Please pick another.");
+    } else {
+      setSubmitError("Something went wrong creating your booking. Please try again.");
+    }
   }
 
   const title =
@@ -507,7 +513,7 @@ export function BookingSheet({
                 <h3 className="text-lg font-semibold tracking-tight">
                   You&rsquo;re all set, {details.firstName}
                 </h3>
-                <p className="text-sm text-muted">Your booking is ready.</p>
+                <p className="text-sm text-muted">Your spot is held.</p>
               </div>
               <div className="w-full text-left">
                 <BookingSummary
@@ -516,9 +522,18 @@ export function BookingSheet({
                   currency={currency}
                 />
               </div>
+              {bookingRef && (
+                <p className="text-xs text-muted">
+                  Booking reference{" "}
+                  <span className="font-medium tabular-nums text-foreground">
+                    {bookingRef.slice(0, 8)}
+                  </span>
+                </p>
+              )}
               <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted">
-                Nothing has been charged or saved yet — payment (Stripe) and your
-                confirmation email (Resend) arrive in the next stages.
+                Your spot is held while payment is set up. Card payment (Stripe)
+                and your confirmation email (Resend) arrive in the next stages —
+                nothing has been charged yet.
               </p>
             </div>
           )}
@@ -554,9 +569,19 @@ export function BookingSheet({
             </Button>
           )}
           {step === "review" && (
-            <Button fullWidth size="lg" onClick={proceedToPayment}>
-              Proceed to payment
-            </Button>
+            <>
+              {submitError && (
+                <p className="text-sm text-red-600">{submitError}</p>
+              )}
+              <Button
+                fullWidth
+                size="lg"
+                onClick={proceedToPayment}
+                disabled={submitting}
+              >
+                {submitting ? "Booking…" : "Proceed to payment"}
+              </Button>
+            </>
           )}
           {step === "confirmation" && (
             <Button fullWidth size="lg" variant="outline" onClick={onClose}>

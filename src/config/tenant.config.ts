@@ -24,6 +24,9 @@ export const tenant: TenantConfig = {
   pricing: {
     sessionPriceMinor: 1000, // £10 PAYGO per session
   },
+  booking: {
+    holdMinutes: 15, // a pending booking holds its spot for 15 min, then frees
+  },
   bundles: [
     {
       id: "block10",

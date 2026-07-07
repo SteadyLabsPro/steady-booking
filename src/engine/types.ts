@@ -52,6 +52,12 @@ export interface PricingRules {
   sessionPriceMinor: number;
 }
 
+/** Booking hold policy. */
+export interface BookingPolicy {
+  /** Minutes a pending (unpaid) booking holds its spot before it expires. */
+  holdMinutes: number;
+}
+
 /** Waiver policy and copy for this tenant. */
 export interface TenantWaiver {
   /**
@@ -101,6 +107,8 @@ export interface TenantConfig {
   defaultCapacity: number;
   /** Pricing rules. */
   pricing: PricingRules;
+  /** Booking hold policy. */
+  booking: BookingPolicy;
   /** Prepaid bundle / block offers. */
   bundles: Bundle[];
   /** Landing hero content. */

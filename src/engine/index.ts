@@ -9,6 +9,7 @@ export type {
   TenantWaiver,
   SchedulingRules,
   PricingRules,
+  BookingPolicy,
   Bundle,
   IconKey,
 } from "./types";
