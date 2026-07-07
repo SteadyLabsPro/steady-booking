@@ -30,7 +30,7 @@ interface BookingSheetProps {
   onClose: () => void;
 }
 
-type Step = "guests" | "details" | "waiver" | "review";
+type Step = "guests" | "details" | "waiver" | "review" | "confirmation";
 
 interface Details {
   firstName: string;
@@ -44,6 +44,20 @@ interface WaiverSignature {
   version: number;
   signatureName: string;
   agreed: boolean[];
+}
+
+/**
+ * The complete booking payload assembled at "Proceed to payment". This is the
+ * shape Stage 6/7 will send to Supabase + Stripe — assembled here so the
+ * handoff point is real even though payment/persistence are stubbed.
+ */
+interface BookingDraft {
+  sessionId: string;
+  guests: number;
+  unitPriceMinor: number;
+  totalMinor: number;
+  customer: Details;
+  waiver: WaiverSignature & { signedAt: string };
 }
 
 const EMPTY_DETAILS: Details = {
@@ -254,6 +268,22 @@ export function BookingSheet({
       s === "review" ? "waiver" : s === "waiver" ? "details" : "guests",
     );
 
+  // "Proceed to payment": assemble the full payload and hand off. Payment and
+  // persistence are stubbed until the Stripe/Supabase stages.
+  function proceedToPayment() {
+    const draft: BookingDraft = {
+      sessionId: slot.id,
+      guests,
+      unitPriceMinor: slot.priceMinor,
+      totalMinor: slot.priceMinor * guests,
+      customer: { ...details },
+      waiver: { ...waiverSignature, signedAt: new Date().toISOString() },
+    };
+    // The payload Stage 6/7 will send to Supabase + Stripe.
+    console.info("[booking draft]", draft);
+    setStep("confirmation");
+  }
+
   const title =
     step === "guests"
       ? slot.serviceName
@@ -261,7 +291,9 @@ export function BookingSheet({
         ? "Your details"
         : step === "waiver"
           ? "Waiver"
-          : "Review";
+          : step === "review"
+            ? "Review"
+            : "Booking ready";
 
   return (
     <div
@@ -285,7 +317,7 @@ export function BookingSheet({
       >
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-border p-5">
-          {step !== "guests" && (
+          {step !== "guests" && step !== "confirmation" && (
             <button
               type="button"
               onClick={goBack}
@@ -463,8 +495,30 @@ export function BookingSheet({
                   {waiverSignature.version})
                 </p>
               </div>
+            </div>
+          )}
+
+          {step === "confirmation" && (
+            <div className="flex flex-col items-center gap-5 py-4 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-highlight/15 text-highlight">
+                <Icon name="check" className="h-6 w-6" />
+              </span>
+              <div className="flex flex-col gap-1">
+                <h3 className="text-lg font-semibold tracking-tight">
+                  You&rsquo;re all set, {details.firstName}
+                </h3>
+                <p className="text-sm text-muted">Your booking is ready.</p>
+              </div>
+              <div className="w-full text-left">
+                <BookingSummary
+                  slot={slot}
+                  guests={guests}
+                  currency={currency}
+                />
+              </div>
               <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted">
-                Next: payment. Arrives in a later stage.
+                Nothing has been charged or saved yet — payment (Stripe) and your
+                confirmation email (Resend) arrive in the next stages.
               </p>
             </div>
           )}
@@ -500,14 +554,14 @@ export function BookingSheet({
             </Button>
           )}
           {step === "review" && (
-            <>
-              <Button fullWidth size="lg" disabled>
-                Proceed to payment
-              </Button>
-              <p className="text-center text-xs text-muted">
-                Payment arrives in a later stage.
-              </p>
-            </>
+            <Button fullWidth size="lg" onClick={proceedToPayment}>
+              Proceed to payment
+            </Button>
+          )}
+          {step === "confirmation" && (
+            <Button fullWidth size="lg" variant="outline" onClick={onClose}>
+              Done
+            </Button>
           )}
         </div>
       </div>

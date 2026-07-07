@@ -16,7 +16,8 @@ export type IconName =
   | "menu"
   | "plus"
   | "minus"
-  | "close";
+  | "close"
+  | "check";
 
 function paths(name: IconName) {
   switch (name) {
@@ -91,6 +92,8 @@ function paths(name: IconName) {
           <line x1="18" y1="6" x2="6" y2="18" />
         </>
       );
+    case "check":
+      return <polyline points="20 6 9 17 4 12" />;
   }
 }
 
