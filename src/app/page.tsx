@@ -31,12 +31,22 @@ const POPULAR_SLOT_TIMES = new Set<string>(["18:00"]);
 
 function Logo() {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src="/tide-house-logo.png"
-      alt={`${tenant.name} — ${tenant.descriptor}`}
-      className="h-16 w-auto sm:h-20"
-    />
+    <>
+      {/* Mobile: horizontal lockup */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/tide-house-logo-horizontal.png"
+        alt={tenant.name}
+        className="block h-10 w-auto md:hidden"
+      />
+      {/* Desktop: stacked lockup */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/tide-house-logo-only.png"
+        alt={tenant.name}
+        className="hidden h-16 w-auto md:block"
+      />
+    </>
   );
 }
 
@@ -107,15 +117,19 @@ export default async function BookingPage() {
 
   return (
     <div className="flex min-h-dvh flex-col pb-24 md:pb-0">
-      <header className={cn(BOUNDS, "flex items-center justify-between py-4")}>
-        <Logo />
-        <button
-          type="button"
-          aria-label="Menu"
-          className="text-foreground md:hidden"
+      <header className="border-b border-[#c2a06a]/70 bg-[#f5eee6]">
+        <div
+          className={cn(BOUNDS, "flex items-center justify-between py-4")}
         >
-          <Icon name="menu" className="h-6 w-6" />
-        </button>
+          <Logo />
+          <button
+            type="button"
+            aria-label="Menu"
+            className="text-foreground md:hidden"
+          >
+            <Icon name="menu" className="h-6 w-6" />
+          </button>
+        </div>
       </header>
 
       <Hero />
