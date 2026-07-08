@@ -97,16 +97,28 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
     });
   }
 
-  if (!open) {
-    return (
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+  return (
+    <>
+      <Button size="sm" onClick={() => setOpen(true)}>
         Add booking
       </Button>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5">
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Add booking"
+        >
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => {
+              reset();
+              setOpen(false);
+            }}
+            className="absolute inset-0 bg-foreground/40"
+          />
+          <div className="relative z-10 mt-auto flex max-h-[92dvh] w-full flex-col gap-4 overflow-y-auto rounded-t-2xl bg-surface p-5 sm:m-auto sm:max-h-[90dvh] sm:max-w-md sm:rounded-2xl">
       <div className="flex items-center justify-between">
         <h3 className="font-medium">Add booking</h3>
         <button
@@ -249,6 +261,9 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
       <Button size="lg" onClick={submit} disabled={pending}>
         {pending ? "Adding…" : "Add confirmed booking"}
       </Button>
-    </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

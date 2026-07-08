@@ -44,11 +44,13 @@ const PAYMENT: Record<
 
 function RevenueTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded-xl border border-border bg-surface p-4">
-      <span className="text-xs font-medium uppercase tracking-wide text-muted">
+    <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-surface p-3">
+      <span className="text-[10px] font-medium uppercase tracking-wide text-muted">
         {label}
       </span>
-      <span className="text-xl font-semibold tabular-nums">{value}</span>
+      <span className="text-base font-semibold tabular-nums sm:text-lg">
+        {value}
+      </span>
     </div>
   );
 }
@@ -113,20 +115,20 @@ export default async function AdminDashboardPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold tracking-tight">Revenue</h1>
-          <p className="text-sm text-muted">Confirmed bookings only.</p>
+      <section className="flex flex-col gap-2">
+        <div className="flex items-baseline justify-between gap-2">
+          <h1 className="text-lg font-semibold tracking-tight">Revenue</h1>
+          <p className="text-xs text-muted">Confirmed only</p>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-4 gap-2">
           <RevenueTile label="Today" value={money(revenue.todayMinor)} />
-          <RevenueTile label="This week" value={money(revenue.weekMinor)} />
-          <RevenueTile label="This month" value={money(revenue.monthMinor)} />
-          <RevenueTile label="This year" value={money(revenue.yearMinor)} />
+          <RevenueTile label="Week" value={money(revenue.weekMinor)} />
+          <RevenueTile label="Month" value={money(revenue.monthMinor)} />
+          <RevenueTile label="Year" value={money(revenue.yearMinor)} />
         </div>
       </section>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h2 className="text-xl font-semibold tracking-tight">Bookings</h2>
           <p className="text-sm text-muted">

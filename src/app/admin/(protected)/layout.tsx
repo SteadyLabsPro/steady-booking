@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/auth";
-import { logout } from "@/lib/admin/actions";
+import { AdminNav } from "@/components/admin/admin-nav";
 
 export const metadata: Metadata = {
   title: "Admin · The Tide House",
@@ -19,27 +19,26 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/admin" className="font-serif text-lg tracking-wide">
-            The Tide House · Admin
+      <header className="border-b border-[#c2a06a]/70 bg-[#f5eee6]">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3 sm:px-8">
+          <Link href="/admin" className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/tide-house-logo-horizontal.png"
+              alt="The Tide House"
+              className="block h-8 w-auto md:hidden"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/tide-house-logo-only.png"
+              alt="The Tide House"
+              className="hidden h-12 w-auto md:block"
+            />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
+              Admin
+            </span>
           </Link>
-          <nav className="flex items-center gap-5 text-sm">
-            <Link
-              href="/admin/tools/qr"
-              className="text-muted transition-colors hover:text-foreground"
-            >
-              QR codes
-            </Link>
-            <form action={logout}>
-              <button
-                type="submit"
-                className="text-muted transition-colors hover:text-foreground"
-              >
-                Log out
-              </button>
-            </form>
-          </nav>
+          <AdminNav />
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8">{children}</main>
