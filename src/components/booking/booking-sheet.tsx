@@ -5,7 +5,7 @@ import { formatPrice, type TenantWaiver } from "@/engine";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/icons";
-import { createBooking } from "@/lib/actions/create-booking";
+import { startCheckout } from "@/lib/actions/checkout";
 import { checkWaiverNeeded } from "@/lib/actions/check-waiver";
 
 /**
@@ -284,12 +284,13 @@ export function BookingSheet({
           : "guests",
     );
 
-  // "Proceed to payment": create a real pending booking (atomic capacity check
-  // in the DB). Payment (Stripe) still comes in a later stage.
+  // "Proceed to payment": create the pending booking, then start payment. When
+  // Stripe is configured we redirect to hosted checkout; otherwise the booking
+  // is held and we show the confirmation step.
   async function proceedToPayment() {
     setSubmitting(true);
     setSubmitError(null);
-    const result = await createBooking({
+    const result = await startCheckout({
       sessionId: slot.id,
       guests,
       firstName: details.firstName,
@@ -298,13 +299,18 @@ export function BookingSheet({
       phone: details.phone,
       signatureName: signatureName.trim() || null,
     });
-    setSubmitting(false);
 
     if (result.ok) {
+      if (result.mode === "redirect") {
+        window.location.href = result.url;
+        return;
+      }
+      setSubmitting(false);
       setBookingRef(result.bookingId);
       setStep("confirmation");
       return;
     }
+    setSubmitting(false);
     if (result.reason === "sold_out") {
       setSubmitError(
         "Sorry — that slot just filled up. Please go back and choose another time.",

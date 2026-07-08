@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { getAvailability } from "@/lib/supabase/availability";
 import { tenant } from "@/config/tenant.config";
+import type { PaymentStatus } from "@/lib/payments/types";
 import {
   sessionDateKey,
   addDaysKey,
@@ -33,6 +34,7 @@ export interface AdminBookingRow {
   email: string;
   phone: string;
   waiverSigned: boolean;
+  paymentStatus: PaymentStatus;
   totalMinor: number;
 }
 
@@ -78,7 +80,7 @@ export async function getAdminBookings(
   const { data, error } = await sb
     .from("bookings")
     .select(
-      `id, quantity, total_minor, status, expires_at,
+      `id, quantity, total_minor, status, payment_status, expires_at,
        sessions!inner ( starts_at ),
        customers ( first_name, last_name, email, phone, waivers ( version ) )`,
     )
@@ -117,6 +119,7 @@ export async function getAdminBookings(
       email: customer.email ?? "",
       phone: customer.phone ?? "",
       waiverSigned: versions.includes(activeVersion),
+      paymentStatus: (b.payment_status ?? "pending") as PaymentStatus,
       totalMinor: b.total_minor,
     };
   });

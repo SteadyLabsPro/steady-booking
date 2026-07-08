@@ -30,6 +30,17 @@ const STATUS: Record<AdminBookingStatus, { tone: BadgeTone; label: string }> = {
   cancelled: { tone: "danger", label: "Cancelled" },
 };
 
+const PAYMENT: Record<
+  AdminBookingRow["paymentStatus"],
+  { tone: BadgeTone; label: string }
+> = {
+  paid: { tone: "success", label: "Paid" },
+  pending: { tone: "warning", label: "Unpaid" },
+  failed: { tone: "danger", label: "Payment failed" },
+  refunded: { tone: "neutral", label: "Refunded" },
+  cancelled: { tone: "neutral", label: "Payment cancelled" },
+};
+
 function RevenueTile({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1 rounded-xl border border-border bg-surface p-4">
@@ -56,6 +67,9 @@ function BookingRow({ r }: { r: AdminBookingRow }) {
       </div>
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         <Badge tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Badge>
+        <Badge tone={PAYMENT[r.paymentStatus].tone}>
+          {PAYMENT[r.paymentStatus].label}
+        </Badge>
         <Badge tone={r.waiverSigned ? "success" : "danger"}>
           {r.waiverSigned ? `Waiver v${tenant.waiver.version}` : "No waiver"}
         </Badge>
