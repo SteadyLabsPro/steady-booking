@@ -8,6 +8,7 @@ import {
   type AdminWindow,
   type AdminBookingStatus,
 } from "@/lib/admin/bookings";
+import { getRevenueSummary } from "@/lib/admin/revenue";
 
 // Live booking data — never cache.
 export const dynamic = "force-dynamic";
@@ -25,6 +26,17 @@ const STATUS: Record<AdminBookingStatus, { tone: BadgeTone; label: string }> = {
   cancelled: { tone: "danger", label: "Cancelled" },
 };
 
+function RevenueTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-xl border border-border bg-surface p-4">
+      <span className="text-xs font-medium uppercase tracking-wide text-muted">
+        {label}
+      </span>
+      <span className="text-xl font-semibold tabular-nums">{value}</span>
+    </div>
+  );
+}
+
 export default async function AdminDashboardPage({
   searchParams,
 }: {
@@ -37,13 +49,30 @@ export default async function AdminDashboardPage({
     ? (sp.window as AdminWindow)
     : "today";
 
-  const rows = await getAdminBookings(window);
+  const [rows, revenue] = await Promise.all([
+    getAdminBookings(window),
+    getRevenueSummary(),
+  ]);
   const tz = tenant.timezone;
+  const money = (minor: number) => formatPrice(minor, tenant.currency);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold tracking-tight">Revenue</h1>
+          <p className="text-sm text-muted">Confirmed bookings only.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <RevenueTile label="Today" value={money(revenue.todayMinor)} />
+          <RevenueTile label="This week" value={money(revenue.weekMinor)} />
+          <RevenueTile label="This month" value={money(revenue.monthMinor)} />
+          <RevenueTile label="This year" value={money(revenue.yearMinor)} />
+        </div>
+      </section>
+
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">Bookings</h1>
+        <h2 className="text-xl font-semibold tracking-tight">Bookings</h2>
         <p className="text-sm text-muted">
           {rows.length} booking{rows.length === 1 ? "" : "s"} · by session date
         </p>
