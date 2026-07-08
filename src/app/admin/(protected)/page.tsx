@@ -8,6 +8,7 @@ import {
   getBookableSessions,
   type AdminWindow,
   type AdminBookingStatus,
+  type AdminBookingRow,
 } from "@/lib/admin/bookings";
 import { getRevenueSummary } from "@/lib/admin/revenue";
 import { CancelBookingButton } from "@/components/admin/cancel-booking-button";
@@ -40,6 +41,38 @@ function RevenueTile({ label, value }: { label: string; value: string }) {
   );
 }
 
+function BookingRow({ r }: { r: AdminBookingRow }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-0.5">
+        <span className="font-medium tabular-nums">
+          {formatSessionDate(r.startsAt, tenant.timezone)} ·{" "}
+          {formatSessionTime(r.startsAt, tenant.timezone)}
+        </span>
+        <span className="text-sm text-muted">
+          {r.customerName || "—"} · {r.email}
+          {r.phone ? ` · ${r.phone}` : ""}
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Badge tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Badge>
+        <Badge tone={r.waiverSigned ? "success" : "danger"}>
+          {r.waiverSigned ? `Waiver v${tenant.waiver.version}` : "No waiver"}
+        </Badge>
+        <span className="text-sm text-muted">
+          {r.guests} {r.guests === 1 ? "guest" : "guests"}
+        </span>
+        <span className="font-semibold tabular-nums">
+          {formatPrice(r.totalMinor, tenant.currency)}
+        </span>
+        {(r.status === "confirmed" || r.status === "pending") && (
+          <CancelBookingButton id={r.id} />
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default async function AdminDashboardPage({
   searchParams,
 }: {
@@ -57,8 +90,11 @@ export default async function AdminDashboardPage({
     getRevenueSummary(),
     getBookableSessions(),
   ]);
-  const tz = tenant.timezone;
   const money = (minor: number) => formatPrice(minor, tenant.currency);
+
+  // Expired holds are lapsed 15-min baskets — kept out of the main list.
+  const active = rows.filter((r) => r.status !== "expired");
+  const expired = rows.filter((r) => r.status === "expired");
 
   return (
     <div className="flex flex-col gap-8">
@@ -79,7 +115,8 @@ export default async function AdminDashboardPage({
         <div className="flex flex-col gap-1">
           <h2 className="text-xl font-semibold tracking-tight">Bookings</h2>
           <p className="text-sm text-muted">
-            {rows.length} booking{rows.length === 1 ? "" : "s"} · by session date
+            {active.length} booking{active.length === 1 ? "" : "s"} · by session
+            date
           </p>
         </div>
         <AddBooking sessions={bookableSessions} />
@@ -102,48 +139,33 @@ export default async function AdminDashboardPage({
         ))}
       </div>
 
-      {rows.length === 0 ? (
+      {active.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted">
           No bookings in this period.
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {rows.map((r) => (
-            <div
-              key={r.id}
-              className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex flex-col gap-0.5">
-                <span className="font-medium tabular-nums">
-                  {formatSessionDate(r.startsAt, tz)} ·{" "}
-                  {formatSessionTime(r.startsAt, tz)}
-                </span>
-                <span className="text-sm text-muted">
-                  {r.customerName || "—"} · {r.email}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <Badge tone={STATUS[r.status].tone}>
-                  {STATUS[r.status].label}
-                </Badge>
-                <Badge tone={r.waiverSigned ? "success" : "danger"}>
-                  {r.waiverSigned
-                    ? `Waiver v${tenant.waiver.version}`
-                    : "No waiver"}
-                </Badge>
-                <span className="text-sm text-muted">
-                  {r.guests} {r.guests === 1 ? "guest" : "guests"}
-                </span>
-                <span className="font-semibold tabular-nums">
-                  {formatPrice(r.totalMinor, tenant.currency)}
-                </span>
-                {(r.status === "confirmed" || r.status === "pending") && (
-                  <CancelBookingButton id={r.id} />
-                )}
-              </div>
-            </div>
+          {active.map((r) => (
+            <BookingRow key={r.id} r={r} />
           ))}
         </div>
+      )}
+
+      {expired.length > 0 && (
+        <details className="rounded-xl border border-border bg-subtle/40 p-4">
+          <summary className="cursor-pointer text-sm font-medium text-muted">
+            Expired holds ({expired.length})
+          </summary>
+          <p className="mt-1 text-xs text-muted">
+            Baskets that weren&rsquo;t paid within the 15-minute hold — they
+            don&rsquo;t take up any spaces.
+          </p>
+          <div className="mt-3 flex flex-col gap-2">
+            {expired.map((r) => (
+              <BookingRow key={r.id} r={r} />
+            ))}
+          </div>
+        </details>
       )}
     </div>
   );

@@ -31,6 +31,7 @@ export interface AdminBookingRow {
   status: AdminBookingStatus;
   customerName: string;
   email: string;
+  phone: string;
   waiverSigned: boolean;
   totalMinor: number;
 }
@@ -79,7 +80,7 @@ export async function getAdminBookings(
     .select(
       `id, quantity, total_minor, status, expires_at,
        sessions!inner ( starts_at ),
-       customers ( first_name, last_name, email, waivers ( version ) )`,
+       customers ( first_name, last_name, email, phone, waivers ( version ) )`,
     )
     .gte("sessions.starts_at", startISO)
     .lt("sessions.starts_at", endISO);
@@ -114,6 +115,7 @@ export async function getAdminBookings(
       customerName:
         `${customer.first_name ?? ""} ${customer.last_name ?? ""}`.trim(),
       email: customer.email ?? "",
+      phone: customer.phone ?? "",
       waiverSigned: versions.includes(activeVersion),
       totalMinor: b.total_minor,
     };
