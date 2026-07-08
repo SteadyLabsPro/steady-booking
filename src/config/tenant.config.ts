@@ -9,6 +9,7 @@ import type { TenantConfig } from "@/engine";
 export const tenant: TenantConfig = {
   name: "The Tide House",
   descriptor: "Sauna & Cold Plunge",
+  address: "Advantage Padel, Mudeford",
   tagline: "Sauna & cold plunge by the sea.",
   contactEmail: "hello@thetidehouse.co.uk",
   currency: "GBP",

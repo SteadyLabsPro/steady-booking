@@ -4,6 +4,7 @@ import {
   paymentUpdateForEvent,
 } from "@/lib/payments/stripe";
 import { createServiceClient } from "@/lib/supabase/server";
+import { sendBookingConfirmation } from "@/lib/email/booking-confirmation";
 
 /**
  * Stripe webhook. Verifies the signature, maps the event to an internal
@@ -32,7 +33,16 @@ export async function POST(req: Request) {
       payment_status: update.paymentStatus,
     };
     if (update.confirmBooking) patch.status = "confirmed";
-    await sb.from("bookings").update(patch).eq("payment_ref", update.ref);
+    const { data } = await sb
+      .from("bookings")
+      .update(patch)
+      .eq("payment_ref", update.ref)
+      .select("id");
+
+    // Email the customer once the booking is confirmed by payment.
+    if (update.confirmBooking && data?.[0]?.id) {
+      await sendBookingConfirmation(data[0].id);
+    }
   }
 
   return NextResponse.json({ received: true });

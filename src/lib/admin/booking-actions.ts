@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
 import { tenant } from "@/config/tenant.config";
+import { sendBookingConfirmation } from "@/lib/email/booking-confirmation";
 import { requireAdmin } from "./auth";
 
 type ServiceClient = ReturnType<typeof createServiceClient>;
@@ -136,6 +137,9 @@ export async function adminAddBooking(
       );
     }
   }
+
+  // Confirmed manual booking → send the customer their confirmation.
+  await sendBookingConfirmation(row.booking_id);
 
   revalidatePath("/admin");
   revalidatePath("/");

@@ -87,6 +87,8 @@ export interface TenantConfig {
   name: string;
   /** Small descriptor shown under the wordmark, e.g. "Sauna & Cold Plunge". */
   descriptor: string;
+  /** Venue address / location, shown in confirmation emails. */
+  address: string;
   /** Short tagline, used in metadata. */
   tagline: string;
   /** Primary contact / email reply-to address. */
