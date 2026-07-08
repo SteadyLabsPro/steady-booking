@@ -2,7 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { adminAddBooking } from "@/lib/admin/booking-actions";
+import {
+  adminAddBooking,
+  type AdminPaymentChoice,
+} from "@/lib/admin/booking-actions";
 import { checkWaiverNeeded } from "@/lib/actions/check-waiver";
 import type { SessionOption } from "@/lib/admin/bookings";
 import { Button } from "@/components/ui/button";
@@ -22,6 +25,8 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [guests, setGuests] = useState(1);
+  const [paymentChoice, setPaymentChoice] =
+    useState<AdminPaymentChoice>("unpaid");
   const [waiverStatus, setWaiverStatus] = useState<WaiverStatus>("unknown");
   const [acknowledged, setAcknowledged] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +43,7 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
     setEmail("");
     setPhone("");
     setGuests(1);
+    setPaymentChoice("unpaid");
     setWaiverStatus("unknown");
     setAcknowledged(false);
     setError(null);
@@ -74,6 +80,7 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
         phone,
         guests,
         acknowledgeWaiver: acknowledged,
+        paymentChoice,
       });
       if (result.ok) {
         reset();
@@ -171,6 +178,31 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
       />
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-sm font-medium">Payment</legend>
+        {(
+          [
+            ["paid", "Paid manually"],
+            ["complimentary", "Complimentary"],
+            ["unpaid", "Unpaid / pay on arrival"],
+          ] as [AdminPaymentChoice, string][]
+        ).map(([value, label]) => (
+          <label key={value} className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="payment-choice"
+              checked={paymentChoice === value}
+              onChange={() => setPaymentChoice(value)}
+              className="h-4 w-4 accent-accent"
+            />
+            <span>{label}</span>
+          </label>
+        ))}
+        <p className="text-xs text-muted">
+          Only &ldquo;Paid manually&rdquo; counts towards revenue.
+        </p>
+      </fieldset>
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="ab-guests" className="text-sm font-medium">

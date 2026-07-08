@@ -36,6 +36,7 @@ const PAYMENT: Record<
 > = {
   paid: { tone: "success", label: "Paid" },
   pending: { tone: "warning", label: "Unpaid" },
+  complimentary: { tone: "neutral", label: "Complimentary" },
   failed: { tone: "danger", label: "Payment failed" },
   refunded: { tone: "neutral", label: "Refunded" },
   cancelled: { tone: "neutral", label: "Payment cancelled" },

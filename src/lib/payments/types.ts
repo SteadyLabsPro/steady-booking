@@ -8,7 +8,8 @@ export type PaymentStatus =
   | "paid"
   | "failed"
   | "refunded"
-  | "cancelled";
+  | "cancelled"
+  | "complimentary";
 
 export interface CheckoutParams {
   bookingId: string;

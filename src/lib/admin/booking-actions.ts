@@ -47,6 +47,15 @@ export async function cancelBooking(id: string): Promise<void> {
   revalidatePath("/");
 }
 
+/** Admin's explicit payment choice for a manual booking. */
+export type AdminPaymentChoice = "paid" | "complimentary" | "unpaid";
+
+const PAYMENT_STATUS_BY_CHOICE: Record<AdminPaymentChoice, string> = {
+  paid: "paid",
+  complimentary: "complimentary",
+  unpaid: "pending",
+};
+
 export interface AdminAddBookingInput {
   sessionId: string;
   firstName: string;
@@ -56,6 +65,8 @@ export interface AdminAddBookingInput {
   guests: number;
   /** Staff confirmation that the customer acknowledged the waiver terms. */
   acknowledgeWaiver: boolean;
+  /** How the booking is being paid — drives revenue and the payment badge. */
+  paymentChoice: AdminPaymentChoice;
 }
 
 export type AdminAddBookingResult =
@@ -91,6 +102,7 @@ export async function adminAddBooking(
     p_last_name: input.lastName.trim(),
     p_email: input.email.trim(),
     p_phone: input.phone.trim(),
+    p_payment_status: PAYMENT_STATUS_BY_CHOICE[input.paymentChoice],
   });
 
   if (error) {
