@@ -55,9 +55,6 @@ function Hero() {
   return (
     <section className={cn(BOUNDS, "pt-2 pb-12")}>
       <div className="flex max-w-4xl flex-col gap-5">
-        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-          {hero.eyebrow}
-        </span>
         <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
           {hero.headline}
         </h1>
@@ -119,9 +116,20 @@ export default async function BookingPage() {
     <div className="flex min-h-dvh flex-col pb-24 md:pb-0">
       <header className="border-b border-[#c2a06a]/70 bg-[#f5eee6]">
         <div
-          className={cn(BOUNDS, "flex items-center justify-between py-4")}
+          className={cn(BOUNDS, "flex items-center justify-between gap-4 py-4")}
         >
-          <Logo />
+          {/* Left: logo (+ descriptor beneath it on mobile) */}
+          <div className="flex flex-col gap-1.5">
+            <Logo />
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted md:hidden">
+              {tenant.descriptor}
+            </span>
+          </div>
+          {/* Desktop: descriptor right-aligned */}
+          <span className="hidden text-xs font-medium uppercase tracking-[0.2em] text-muted md:block">
+            {tenant.descriptor}
+          </span>
+          {/* Mobile: menu */}
           <button
             type="button"
             aria-label="Menu"
