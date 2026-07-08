@@ -9,6 +9,7 @@ import {
   type AdminBookingStatus,
 } from "@/lib/admin/bookings";
 import { getRevenueSummary } from "@/lib/admin/revenue";
+import { CancelBookingButton } from "@/components/admin/cancel-booking-button";
 
 // Live booking data — never cache.
 export const dynamic = "force-dynamic";
@@ -130,6 +131,9 @@ export default async function AdminDashboardPage({
                 <span className="font-semibold tabular-nums">
                   {formatPrice(r.totalMinor, tenant.currency)}
                 </span>
+                {(r.status === "confirmed" || r.status === "pending") && (
+                  <CancelBookingButton id={r.id} />
+                )}
               </div>
             </div>
           ))}
