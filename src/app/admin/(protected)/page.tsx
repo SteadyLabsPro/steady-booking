@@ -5,11 +5,13 @@ import { cn } from "@/lib/utils";
 import { Badge, type BadgeTone } from "@/components/admin/badge";
 import {
   getAdminBookings,
+  getBookableSessions,
   type AdminWindow,
   type AdminBookingStatus,
 } from "@/lib/admin/bookings";
 import { getRevenueSummary } from "@/lib/admin/revenue";
 import { CancelBookingButton } from "@/components/admin/cancel-booking-button";
+import { AddBooking } from "@/components/admin/add-booking";
 
 // Live booking data — never cache.
 export const dynamic = "force-dynamic";
@@ -50,9 +52,10 @@ export default async function AdminDashboardPage({
     ? (sp.window as AdminWindow)
     : "today";
 
-  const [rows, revenue] = await Promise.all([
+  const [rows, revenue, bookableSessions] = await Promise.all([
     getAdminBookings(window),
     getRevenueSummary(),
+    getBookableSessions(),
   ]);
   const tz = tenant.timezone;
   const money = (minor: number) => formatPrice(minor, tenant.currency);
@@ -72,11 +75,14 @@ export default async function AdminDashboardPage({
         </div>
       </section>
 
-      <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-semibold tracking-tight">Bookings</h2>
-        <p className="text-sm text-muted">
-          {rows.length} booking{rows.length === 1 ? "" : "s"} · by session date
-        </p>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-xl font-semibold tracking-tight">Bookings</h2>
+          <p className="text-sm text-muted">
+            {rows.length} booking{rows.length === 1 ? "" : "s"} · by session date
+          </p>
+        </div>
+        <AddBooking sessions={bookableSessions} />
       </div>
 
       <div className="flex w-fit gap-1 rounded-lg border border-border bg-subtle p-1">

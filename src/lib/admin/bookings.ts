@@ -1,10 +1,13 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { getAvailability } from "@/lib/supabase/availability";
 import { tenant } from "@/config/tenant.config";
 import {
   sessionDateKey,
   addDaysKey,
   dayKeyWeekday,
   zonedTimeToUtcISO,
+  formatSessionDate,
+  formatSessionTime,
 } from "@/engine";
 
 /**
@@ -119,4 +122,34 @@ export async function getAdminBookings(
 
   rows.sort((a, b) => (a.startsAt < b.startsAt ? -1 : 1));
   return rows;
+}
+
+/** Option for the manual-add session picker. */
+export interface SessionOption {
+  id: string;
+  label: string;
+  remaining: number;
+}
+
+/** Upcoming sessions with spaces left, for the manual-add picker. */
+export async function getBookableSessions(): Promise<SessionOption[]> {
+  const tz = tenant.timezone;
+  const todayKey = sessionDateKey(new Date().toISOString(), tz);
+  const { sessions, remainingBySession } = await getAvailability(todayKey, 14);
+
+  return sessions
+    .map((s) => ({
+      id: s.id,
+      startsAt: s.startsAt,
+      remaining: remainingBySession[s.id] ?? s.capacity,
+    }))
+    .filter((s) => s.remaining > 0)
+    .map((s) => ({
+      id: s.id,
+      remaining: s.remaining,
+      label: `${formatSessionDate(s.startsAt, tz)} · ${formatSessionTime(
+        s.startsAt,
+        tz,
+      )} — ${s.remaining} left`,
+    }));
 }
