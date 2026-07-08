@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/auth";
 import { logout } from "@/lib/admin/actions";
 
@@ -20,17 +21,25 @@ export default async function AdminLayout({
     <div className="min-h-dvh">
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-          <span className="font-serif text-lg tracking-wide">
+          <Link href="/admin" className="font-serif text-lg tracking-wide">
             The Tide House · Admin
-          </span>
-          <form action={logout}>
-            <button
-              type="submit"
-              className="text-sm text-muted transition-colors hover:text-foreground"
+          </Link>
+          <nav className="flex items-center gap-5 text-sm">
+            <Link
+              href="/admin/tools/qr"
+              className="text-muted transition-colors hover:text-foreground"
             >
-              Log out
-            </button>
-          </form>
+              QR codes
+            </Link>
+            <form action={logout}>
+              <button
+                type="submit"
+                className="text-muted transition-colors hover:text-foreground"
+              >
+                Log out
+              </button>
+            </form>
+          </nav>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8">{children}</main>
