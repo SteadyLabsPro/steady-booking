@@ -7,7 +7,6 @@ import {
 } from "@/engine";
 import { getAvailability } from "@/lib/supabase/availability";
 import { cn } from "@/lib/utils";
-import { Icon } from "@/components/icons";
 import {
   BookingView,
   type SlotView,
@@ -37,14 +36,14 @@ function Logo() {
       <img
         src="/tide-house-logo-horizontal.png"
         alt={tenant.name}
-        className="block h-10 w-auto md:hidden"
+        className="block h-9 w-auto shrink-0 md:hidden"
       />
       {/* Desktop: stacked lockup */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/tide-house-logo-only.png"
         alt={tenant.name}
-        className="hidden h-16 w-auto md:block"
+        className="hidden h-16 w-auto shrink-0 md:block"
       />
     </>
   );
@@ -53,7 +52,7 @@ function Logo() {
 function Hero() {
   const { hero } = tenant;
   const price = formatPrice(tenant.pricing.sessionPriceMinor, tenant.currency);
-  const { openTime, lastSlotTime } = tenant.scheduling;
+  const { openTime, lastSlotTime, daysOfWeek } = tenant.scheduling;
 
   return (
     <section className={cn(BOUNDS, "pt-10 pb-12 sm:pt-16")}>
@@ -69,16 +68,15 @@ function Hero() {
 
         <p className="max-w-xl text-base text-muted">{hero.subcopy}</p>
 
-        <div className="flex flex-wrap gap-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/5 px-4 py-2 text-sm">
-            <span className="font-semibold text-accent">From {price}</span>
-            <span className="text-muted">per person, per session</span>
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/5 px-4 py-2 text-sm">
-            <span className="text-muted">Open from</span>
-            <span className="font-semibold text-accent">{openTime}</span>
-            <span className="text-muted">· last session</span>
-            <span className="font-semibold text-accent">{lastSlotTime}</span>
+        <div>
+          <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full bg-accent px-5 py-2.5 text-sm text-white">
+            <span className="font-semibold">{price}pp</span>
+            <span className="text-[#c2a06a]">|</span>
+            <span>
+              {openTime}–{lastSlotTime}
+            </span>
+            <span className="text-[#c2a06a]">|</span>
+            <span>{daysOfWeek.length} days p/w</span>
           </span>
         </div>
       </div>
@@ -124,27 +122,12 @@ export default async function BookingPage() {
     <div className="flex min-h-dvh flex-col pb-24 md:pb-0">
       <header className="border-b border-[#c2a06a]/70 bg-[#f5eee6]">
         <div
-          className={cn(BOUNDS, "flex items-center justify-between gap-4 py-4")}
+          className={cn(BOUNDS, "flex items-center justify-between gap-3 py-4")}
         >
-          {/* Left: logo (+ descriptor beneath it on mobile) */}
-          <div className="flex flex-col gap-1.5">
-            <Logo />
-            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted md:hidden">
-              {tenant.descriptor}
-            </span>
-          </div>
-          {/* Desktop: descriptor right-aligned */}
-          <span className="hidden text-xs font-medium uppercase tracking-[0.2em] text-muted md:block">
+          <Logo />
+          <span className="text-right text-[10px] font-medium uppercase leading-tight tracking-[0.14em] text-muted sm:text-xs sm:tracking-[0.2em]">
             {tenant.descriptor}
           </span>
-          {/* Mobile: menu */}
-          <button
-            type="button"
-            aria-label="Menu"
-            className="text-foreground md:hidden"
-          >
-            <Icon name="menu" className="h-6 w-6" />
-          </button>
         </div>
       </header>
 

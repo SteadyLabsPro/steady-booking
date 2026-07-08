@@ -38,7 +38,7 @@ export const tenant: TenantConfig = {
   hero: {
     headline: "Sauna & Cold Plunge, Mudeford",
     subCaption: "Located inside Advantage Padel.",
-    subcopy: "Traditional Finnish sauna and ice-cold plunge tubs",
+    subcopy: "Finnish sauna and ice-cold plunge tubs",
   },
   features: [
     { label: "Wood-fired sauna", icon: "sauna" },
