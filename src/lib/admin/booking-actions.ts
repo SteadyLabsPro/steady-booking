@@ -2,7 +2,30 @@
 
 import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
+import { tenant } from "@/config/tenant.config";
 import { requireAdmin } from "./auth";
+
+type ServiceClient = ReturnType<typeof createServiceClient>;
+
+/** Whether this email still needs to sign/acknowledge the active waiver. */
+async function customerNeedsWaiver(
+  sb: ServiceClient,
+  email: string,
+): Promise<boolean> {
+  const { data: c } = await sb
+    .from("customers")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+  if (!c) return true;
+  const { data: w } = await sb
+    .from("waivers")
+    .select("version")
+    .eq("customer_id", c.id);
+  return !((w ?? []) as { version: number }[]).some(
+    (x) => x.version === tenant.waiver.version,
+  );
+}
 
 /**
  * Cancel a booking — sets status to 'cancelled' (never deletes). The
@@ -21,6 +44,7 @@ export async function cancelBooking(id: string): Promise<void> {
 
   if (error) throw new Error(`cancel failed: ${error.message}`);
   revalidatePath("/admin");
+  revalidatePath("/");
 }
 
 export interface AdminAddBookingInput {
@@ -30,19 +54,36 @@ export interface AdminAddBookingInput {
   email: string;
   phone: string;
   guests: number;
+  /** Staff confirmation that the customer acknowledged the waiver terms. */
+  acknowledgeWaiver: boolean;
 }
 
 export type AdminAddBookingResult =
   | { ok: true; bookingId: string }
-  | { ok: false; reason: "sold_out" | "session_unavailable" | "error"; message?: string };
+  | {
+      ok: false;
+      reason: "waiver_required" | "sold_out" | "session_unavailable" | "error";
+      message?: string;
+    };
 
-/** Manually add a confirmed booking (capacity-checked, no waiver required). */
+/**
+ * Manually add a confirmed booking (capacity-checked). If the customer hasn't
+ * signed the active waiver, staff must confirm the customer acknowledged the
+ * terms; that acknowledgement is then recorded so it's on file going forward.
+ */
 export async function adminAddBooking(
   input: AdminAddBookingInput,
 ): Promise<AdminAddBookingResult> {
   await requireAdmin();
 
   const sb = createServiceClient();
+  const email = input.email.trim().toLowerCase();
+
+  const needsWaiver = await customerNeedsWaiver(sb, email);
+  if (needsWaiver && !input.acknowledgeWaiver) {
+    return { ok: false, reason: "waiver_required" };
+  }
+
   const { data, error } = await sb.rpc("admin_create_booking", {
     p_session_id: input.sessionId,
     p_quantity: input.guests,
@@ -63,6 +104,28 @@ export async function adminAddBooking(
   }
 
   const row = Array.isArray(data) ? data[0] : data;
+
+  // Record the acknowledged waiver so the customer is on file next time.
+  if (needsWaiver && input.acknowledgeWaiver) {
+    const { data: cust } = await sb
+      .from("customers")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+    if (cust) {
+      await sb.from("waivers").upsert(
+        {
+          customer_id: cust.id,
+          version: tenant.waiver.version,
+          signature_name:
+            `${input.firstName.trim()} ${input.lastName.trim()}`.trim(),
+        },
+        { onConflict: "customer_id,version", ignoreDuplicates: true },
+      );
+    }
+  }
+
   revalidatePath("/admin");
+  revalidatePath("/");
   return { ok: true, bookingId: row.booking_id };
 }

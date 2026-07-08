@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adminAddBooking } from "@/lib/admin/booking-actions";
+import { checkWaiverNeeded } from "@/lib/actions/check-waiver";
 import type { SessionOption } from "@/lib/admin/bookings";
 import { Button } from "@/components/ui/button";
 
@@ -10,7 +11,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const inputCls =
   "h-11 rounded-md border border-border bg-surface px-3 text-base outline-none transition-colors focus:border-accent";
 
-/** Manual "Add booking" — a confirmed, capacity-checked booking (no waiver). */
+type WaiverStatus = "unknown" | "checking" | "needed" | "signed";
+
+/** Manual "Add booking" — a confirmed, capacity-checked booking. */
 export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
   const [open, setOpen] = useState(false);
   const [sessionId, setSessionId] = useState("");
@@ -19,6 +22,8 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [guests, setGuests] = useState(1);
+  const [waiverStatus, setWaiverStatus] = useState<WaiverStatus>("unknown");
+  const [acknowledged, setAcknowledged] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -33,7 +38,20 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
     setEmail("");
     setPhone("");
     setGuests(1);
+    setWaiverStatus("unknown");
+    setAcknowledged(false);
     setError(null);
+  }
+
+  async function checkWaiver() {
+    if (!EMAIL_RE.test(email.trim())) return;
+    setWaiverStatus("checking");
+    try {
+      const { needsWaiver } = await checkWaiverNeeded(email);
+      setWaiverStatus(needsWaiver ? "needed" : "signed");
+    } catch {
+      setWaiverStatus("unknown");
+    }
   }
 
   function submit() {
@@ -43,6 +61,8 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
     if (!EMAIL_RE.test(email.trim())) return setError("Enter a valid email.");
     if (guests < 1 || guests > maxGuests)
       return setError(`Guests must be between 1 and ${maxGuests}.`);
+    if (waiverStatus === "needed" && !acknowledged)
+      return setError("Please confirm the customer acknowledges the waiver.");
     setError(null);
 
     startTransition(async () => {
@@ -53,11 +73,15 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
         email,
         phone,
         guests,
+        acknowledgeWaiver: acknowledged,
       });
       if (result.ok) {
         reset();
         setOpen(false);
         router.refresh();
+      } else if (result.reason === "waiver_required") {
+        setWaiverStatus("needed");
+        setError("This customer must acknowledge the waiver — please tick the box.");
       } else if (result.reason === "sold_out") {
         setError("Not enough spaces left on that session.");
       } else {
@@ -132,7 +156,12 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
         inputMode="email"
         placeholder="Email"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(e) => {
+          setEmail(e.target.value);
+          setWaiverStatus("unknown");
+          setAcknowledged(false);
+        }}
+        onBlur={checkWaiver}
       />
       <input
         className={inputCls}
@@ -157,6 +186,31 @@ export function AddBooking({ sessions }: { sessions: SessionOption[] }) {
           className={`${inputCls} w-24`}
         />
       </div>
+
+      {/* Waiver status */}
+      {waiverStatus === "checking" && (
+        <p className="text-xs text-muted">Checking waiver…</p>
+      )}
+      {waiverStatus === "signed" && (
+        <p className="text-sm font-medium text-green-700">Waiver on file ✓</p>
+      )}
+      {waiverStatus === "needed" && (
+        <div className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3">
+          <p className="text-sm text-amber-900">
+            This customer hasn&rsquo;t signed a waiver. Please ask them to
+            confirm they acknowledge the waiver terms.
+          </p>
+          <label className="flex items-start gap-2 text-sm text-amber-900">
+            <input
+              type="checkbox"
+              checked={acknowledged}
+              onChange={(e) => setAcknowledged(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-accent"
+            />
+            <span>Customer acknowledges the waiver terms.</span>
+          </label>
+        </div>
+      )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

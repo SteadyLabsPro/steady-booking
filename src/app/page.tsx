@@ -29,75 +29,42 @@ const AVAILABILITY_WINDOW_DAYS = 14;
 // Presentation-only: slot times flagged as popular.
 const POPULAR_SLOT_TIMES = new Set<string>(["18:00"]);
 
-function Wordmark() {
+function Logo() {
   return (
-    <div className="flex flex-col leading-none">
-      <span className="font-serif text-lg font-medium tracking-wide">
-        {tenant.name.toUpperCase()}
-      </span>
-      <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
-        {tenant.descriptor}
-      </span>
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/tide-house-logo.png"
+      alt={`${tenant.name} — ${tenant.descriptor}`}
+      className="h-16 w-auto sm:h-20"
+    />
   );
 }
 
 function Hero() {
   const { hero } = tenant;
   return (
-    <section className={cn(BOUNDS, "pt-2 pb-10")}>
-      <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
-        <div className="flex flex-col gap-5">
-          <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-            {hero.eyebrow}
-          </span>
-          <h1 className="font-serif text-4xl leading-[1.05] tracking-tight sm:text-5xl">
-            {hero.headline}
-          </h1>
-          <div className="flex flex-col gap-2">
-            <p className="text-base font-semibold text-foreground">
-              {hero.tagline}
-            </p>
-            <p className="max-w-md text-base text-muted">{hero.subcopy}</p>
-          </div>
-          <div>
-            <a
-              href="#book"
-              className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
-            >
-              {hero.ctaLabel}
-              <Icon name="arrow-right" className="h-4 w-4" />
-            </a>
-          </div>
+    <section className={cn(BOUNDS, "pt-2 pb-12")}>
+      <div className="flex max-w-4xl flex-col gap-5">
+        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+          {hero.eyebrow}
+        </span>
+        <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
+          {hero.headline}
+        </h1>
+        <div className="flex flex-col gap-2">
+          <p className="text-lg font-semibold text-foreground">
+            {hero.tagline}
+          </p>
+          <p className="max-w-xl text-base text-muted">{hero.subcopy}</p>
         </div>
-
-        {/* Hero image — swap the gradient for a photo via tenant.hero.image */}
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl md:aspect-[5/4]">
-          {hero.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={hero.image}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <>
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(180deg,#f7ecd9 0%,#f0dcbf 46%,#aab4b0 54%,#8b9c9d 100%)",
-                }}
-              />
-              <div
-                className="absolute left-1/2 top-[40%] h-28 w-28 -translate-x-1/2 rounded-full"
-                style={{
-                  background:
-                    "radial-gradient(circle,#fff3dd 0%,rgba(255,243,221,0) 70%)",
-                }}
-              />
-            </>
-          )}
+        <div>
+          <a
+            href="#book"
+            className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+          >
+            {hero.ctaLabel}
+            <Icon name="arrow-right" className="h-4 w-4" />
+          </a>
         </div>
       </div>
     </section>
@@ -140,8 +107,8 @@ export default async function BookingPage() {
 
   return (
     <div className="flex min-h-dvh flex-col pb-24 md:pb-0">
-      <header className={cn(BOUNDS, "flex items-center justify-between py-5")}>
-        <Wordmark />
+      <header className={cn(BOUNDS, "flex items-center justify-between py-4")}>
+        <Logo />
         <button
           type="button"
           aria-label="Menu"
