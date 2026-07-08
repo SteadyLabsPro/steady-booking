@@ -52,26 +52,34 @@ function Logo() {
 
 function Hero() {
   const { hero } = tenant;
+  const price = formatPrice(tenant.pricing.sessionPriceMinor, tenant.currency);
+  const { openTime, lastSlotTime } = tenant.scheduling;
+
   return (
     <section className={cn(BOUNDS, "pt-2 pb-12")}>
-      <div className="flex max-w-4xl flex-col gap-5">
-        <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
-          {hero.headline}
-        </h1>
-        <div className="flex flex-col gap-2">
-          <p className="text-lg font-semibold text-foreground">
-            {hero.tagline}
-          </p>
-          <p className="max-w-xl text-base text-muted">{hero.subcopy}</p>
+      <div className="flex max-w-4xl flex-col gap-6">
+        <div className="flex flex-col gap-3">
+          <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
+            {hero.headline}
+          </h1>
+          <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+            {hero.subCaption}
+          </span>
         </div>
-        <div>
-          <a
-            href="#book"
-            className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
-          >
-            {hero.ctaLabel}
-            <Icon name="arrow-right" className="h-4 w-4" />
-          </a>
+
+        <p className="max-w-xl text-base text-muted">{hero.subcopy}</p>
+
+        <div className="flex flex-wrap gap-3">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#c2a06a]/60 bg-surface px-4 py-2 text-sm">
+            <span className="font-semibold text-foreground">From {price}</span>
+            <span className="text-muted">per person, per session</span>
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm">
+            <span className="text-muted">Open from</span>
+            <span className="font-semibold text-foreground">{openTime}</span>
+            <span className="text-muted">· last session</span>
+            <span className="font-semibold text-foreground">{lastSlotTime}</span>
+          </span>
         </div>
       </div>
     </section>

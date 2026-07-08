@@ -73,18 +73,12 @@ export interface TenantWaiver {
 
 /** Marketing content for the landing hero. */
 export interface TenantHero {
-  /** Small eyebrow line above the headline. */
-  eyebrow: string;
   /** Large display headline. */
   headline: string;
-  /** Bold emphasis line beneath the headline. */
-  tagline: string;
-  /** Supporting sentence beneath the tagline. */
+  /** Small caption under the headline (rendered uppercase). */
+  subCaption: string;
+  /** Supporting sentence beneath the headline. */
   subcopy: string;
-  /** Call-to-action button label. */
-  ctaLabel: string;
-  /** Optional path (in /public) to the hero photo; falls back to a gradient. */
-  image?: string;
 }
 
 /** Configuration for a single business (tenant) using the engine. */

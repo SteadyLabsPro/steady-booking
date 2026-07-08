@@ -36,13 +36,9 @@ export const tenant: TenantConfig = {
     },
   ],
   hero: {
-    eyebrow: "Sauna · Cold Plunge · Contrast Therapy",
-    headline: "Recover Faster.",
-    tagline: "Perform better. Sleep deeper. Feel stronger.",
-    subcopy:
-      "Traditional Finnish sauna and ice-cold plunge tubs located inside Advantage Padel, Mudeford. From £10 per person.",
-    ctaLabel: "Book your session",
-    // Drop a photo at /public/hero.jpg and set: image: "/hero.jpg"
+    headline: "Sauna & Cold Plunge, Mudeford",
+    subCaption: "Located inside Advantage Padel.",
+    subcopy: "Traditional Finnish sauna and ice-cold plunge tubs",
   },
   features: [
     { label: "Wood-fired sauna", icon: "sauna" },
