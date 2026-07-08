@@ -56,8 +56,8 @@ function Hero() {
 
   return (
     <section className={cn(BOUNDS, "pt-10 pb-12 sm:pt-16")}>
-      <div className="flex max-w-4xl flex-col gap-6">
-        <div className="flex flex-col gap-3">
+      <div className="flex max-w-4xl flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
             {hero.headline}
           </h1>
@@ -65,8 +65,6 @@ function Hero() {
             {hero.subCaption}
           </span>
         </div>
-
-        <p className="max-w-xl text-base text-muted">{hero.subcopy}</p>
 
         <div>
           <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full bg-accent px-5 py-2.5 text-sm text-white">

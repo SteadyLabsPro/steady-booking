@@ -5,9 +5,14 @@ import { Button } from "@/components/ui/button";
 
 const DEFAULT_URL = "https://booking.steadylabs.pro/";
 
-function imageUrl(format: "svg" | "png", data: string, size?: number) {
+function imageUrl(
+  format: "svg" | "png",
+  data: string,
+  opts: { size?: number; branded?: boolean } = {},
+) {
   const params = new URLSearchParams({ format, data });
-  if (size) params.set("size", String(size));
+  if (opts.size) params.set("size", String(opts.size));
+  if (opts.branded) params.set("branded", "1");
   return `/admin/tools/qr/image?${params.toString()}`;
 }
 
@@ -25,6 +30,7 @@ function fileSlug(data: string): string {
 export default function QrToolPage() {
   const [url, setUrl] = useState(DEFAULT_URL);
   const [active, setActive] = useState(DEFAULT_URL);
+  const [branded, setBranded] = useState(true);
 
   const generate = () => setActive(url.trim() || DEFAULT_URL);
   const slug = fileSlug(active);
@@ -55,20 +61,33 @@ export default function QrToolPage() {
         </div>
       </div>
 
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={branded}
+          onChange={(e) => setBranded(e.target.checked)}
+          className="h-4 w-4 accent-accent"
+        />
+        <span>Branded (navy)</span>
+      </label>
+
       <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-6">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          key={active}
-          src={imageUrl("png", active, 1024)}
+          key={`${active}-${branded}`}
+          src={imageUrl("png", active, { size: 1024, branded })}
           alt="QR code preview"
           className="h-64 w-64"
         />
         <p className="break-all text-center text-xs text-muted">{active}</p>
         <div className="flex flex-wrap justify-center gap-3">
-          <a href={imageUrl("svg", active)} download={`${slug}.svg`}>
+          <a href={imageUrl("svg", active, { branded })} download={`${slug}.svg`}>
             <Button variant="outline">Download SVG</Button>
           </a>
-          <a href={imageUrl("png", active, 2048)} download={`${slug}.png`}>
+          <a
+            href={imageUrl("png", active, { size: 2048, branded })}
+            download={`${slug}.png`}
+          >
             <Button variant="outline">Download PNG</Button>
           </a>
         </div>

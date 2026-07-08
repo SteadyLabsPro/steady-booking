@@ -17,15 +17,18 @@ export async function GET(req: Request) {
     return new Response("Missing 'data'", { status: 400 });
   }
 
+  // Brand navy modules, or plain black.
+  const dark = searchParams.get("branded") === "1" ? "#173a4e" : "#000000";
+
   if (searchParams.get("format") === "svg") {
-    const svg = await qrSvg(data);
+    const svg = await qrSvg(data, dark);
     return new Response(svg, {
       headers: { "Content-Type": "image/svg+xml; charset=utf-8" },
     });
   }
 
   const size = Math.min(4096, Math.max(256, Number(searchParams.get("size")) || 2048));
-  const png = await qrPngBuffer(data, size);
+  const png = await qrPngBuffer(data, size, dark);
   return new Response(new Uint8Array(png), {
     headers: { "Content-Type": "image/png" },
   });
