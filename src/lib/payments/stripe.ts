@@ -48,6 +48,62 @@ export async function createCheckoutSession(
   return { url: session.url ?? "", ref: session.id };
 }
 
+/** Create a hosted Checkout session for an online pass purchase. The metadata
+ * (type=pass + customer details) is read back by the webhook to grant the pass. */
+export async function createPassCheckoutSession(p: {
+  amountMinor: number;
+  currency: string;
+  customerEmail: string;
+  description: string;
+  metadata: Record<string, string>;
+  successUrl: string;
+  cancelUrl: string;
+}): Promise<CheckoutResult> {
+  const session = await stripe().checkout.sessions.create({
+    mode: "payment",
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: p.currency.toLowerCase(),
+          unit_amount: p.amountMinor,
+          product_data: { name: p.description },
+        },
+      },
+    ],
+    customer_email: p.customerEmail,
+    metadata: p.metadata,
+    success_url: p.successUrl,
+    cancel_url: p.cancelUrl,
+  });
+
+  return { url: session.url ?? "", ref: session.id };
+}
+
+/** A completed online pass purchase, or null if the event isn't one. */
+export interface PassPurchase {
+  ref: string;
+  bundleId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
+
+export function passPurchaseForEvent(event: Stripe.Event): PassPurchase | null {
+  if (event.type !== "checkout.session.completed") return null;
+  const s = event.data.object as Stripe.Checkout.Session;
+  if (s.metadata?.type !== "pass") return null;
+  return {
+    ref: s.id,
+    bundleId: s.metadata.bundleId ?? "",
+    firstName: s.metadata.firstName ?? "",
+    lastName: s.metadata.lastName ?? "",
+    email: s.metadata.email ?? s.customer_email ?? "",
+    phone: s.metadata.phone ?? "",
+  };
+}
+
 /** Verify and parse a webhook payload (throws on bad signature). */
 export function constructWebhookEvent(
   payload: string,

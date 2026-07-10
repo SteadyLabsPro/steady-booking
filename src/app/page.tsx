@@ -13,6 +13,8 @@ import {
   type ServiceView,
 } from "@/components/booking/booking-view";
 import { FeatureStrip } from "@/components/booking/feature-strip";
+import { BuyPass } from "@/components/booking/buy-pass";
+import { isStripeConfigured } from "@/lib/payments/stripe";
 
 /**
  * Public booking screen. Editorial landing + date-first booking flow. Reads
@@ -49,10 +51,11 @@ function Logo() {
   );
 }
 
-function Hero() {
+function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
   const { hero } = tenant;
   const price = formatPrice(tenant.pricing.sessionPriceMinor, tenant.currency);
   const { openTime, lastSlotTime, daysOfWeek } = tenant.scheduling;
+  const pass = tenant.bundles[0];
 
   return (
     <section className={cn(BOUNDS, "pt-10 pb-12 sm:pt-16")}>
@@ -66,7 +69,7 @@ function Hero() {
           </span>
         </div>
 
-        <div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full bg-accent px-5 py-2.5 text-sm text-white">
             <span className="font-semibold">{price}pp</span>
             <span className="text-[#c2a06a]">|</span>
@@ -76,6 +79,20 @@ function Hero() {
             <span className="text-[#c2a06a]">|</span>
             <span>{daysOfWeek.length} days p/w</span>
           </span>
+
+          {pass && (
+            <BuyPass
+              canBuyOnline={canBuyOnline}
+              className="text-sm font-medium text-accent underline-offset-4 hover:underline"
+            >
+              Or save with a {pass.sessions}-visit pass —{" "}
+              {formatPrice(pass.priceMinor, tenant.currency)}
+              {pass.validityMonths > 0
+                ? `, valid ${pass.validityMonths} months`
+                : ""}{" "}
+              &rarr;
+            </BuyPass>
+          )}
         </div>
       </div>
     </section>
@@ -89,6 +106,7 @@ export default async function BookingPage() {
   const { services: dbServices, sessions, remainingBySession } =
     await getAvailability(todayKey, AVAILABILITY_WINDOW_DAYS);
 
+  const canBuyOnline = isStripeConfigured();
   const activeServiceIds = new Set(dbServices.map((s) => s.id));
 
   const services: ServiceView[] = dbServices.map((s) => ({
@@ -123,13 +141,26 @@ export default async function BookingPage() {
           className={cn(BOUNDS, "flex items-center justify-between gap-3 py-4")}
         >
           <Logo />
-          <span className="text-right text-[10px] font-medium uppercase leading-tight tracking-[0.14em] text-muted sm:text-xs sm:tracking-[0.2em]">
-            {tenant.descriptor}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-right text-xs font-medium uppercase leading-tight tracking-[0.2em] text-muted sm:block">
+              {tenant.descriptor}
+            </span>
+            <BuyPass
+              canBuyOnline={canBuyOnline}
+              className="inline-flex shrink-0 items-center rounded-full bg-accent px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-accent/90 sm:text-sm"
+            >
+              <span className="hidden sm:inline">
+                10-visit pass · {formatPrice(tenant.bundles[0]?.priceMinor ?? 0, tenant.currency)}
+              </span>
+              <span className="sm:hidden">
+                {formatPrice(tenant.bundles[0]?.priceMinor ?? 0, tenant.currency)} pass
+              </span>
+            </BuyPass>
+          </div>
         </div>
       </header>
 
-      <Hero />
+      <Hero canBuyOnline={canBuyOnline} />
 
       <main className="flex-1">
         <BookingView
