@@ -58,17 +58,33 @@ export interface BookingPolicy {
   holdMinutes: number;
 }
 
-/** Waiver policy and copy for this tenant. */
+/** A waiver clause, optionally with indented sub-points. */
+export interface WaiverItem {
+  text: string;
+  sub?: string[];
+}
+
+/** A titled section of the waiver. */
+export interface WaiverSection {
+  heading: string;
+  items: WaiverItem[];
+}
+
+/** Waiver policy and full content for this tenant. */
 export interface TenantWaiver {
   /**
    * The currently active waiver version. Customers must have signed this exact
    * version; bumping it forces everyone to re-sign on their next booking.
    */
   version: number;
-  /** Short intro shown above the declarations. */
+  /** Intro shown above the sections. */
   intro: string;
-  /** Required declarations the customer must accept (each a checkbox). */
-  declarations: string[];
+  /** Full waiver body, rendered for the customer to read. */
+  sections: WaiverSection[];
+  /** Closing confirmation line. */
+  closing: string;
+  /** Public path to the full waiver PDF, for reference/download. */
+  pdfUrl: string;
 }
 
 /** Marketing content for the landing hero. */

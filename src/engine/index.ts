@@ -7,6 +7,8 @@ export type {
   TenantFeature,
   TenantHero,
   TenantWaiver,
+  WaiverSection,
+  WaiverItem,
   SchedulingRules,
   PricingRules,
   BookingPolicy,

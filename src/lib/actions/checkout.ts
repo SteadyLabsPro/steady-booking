@@ -11,7 +11,12 @@ export type StartCheckoutResult =
   | { ok: true; mode: "held"; bookingId: string }
   | {
       ok: false;
-      reason: "sold_out" | "session_unavailable" | "waiver_required" | "error";
+      reason:
+        | "sold_out"
+        | "session_unavailable"
+        | "waiver_required"
+        | "group_consent_required"
+        | "error";
       message?: string;
     };
 

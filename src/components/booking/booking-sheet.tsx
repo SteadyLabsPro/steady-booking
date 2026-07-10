@@ -45,7 +45,7 @@ interface Details {
 interface WaiverSignature {
   version: number;
   signatureName: string;
-  agreed: boolean[];
+  agreed: boolean;
 }
 
 const EMPTY_DETAILS: Details = {
@@ -188,12 +188,11 @@ export function BookingSheet({
   const [errors, setErrors] = useState<Partial<Record<keyof Details, string>>>(
     {},
   );
-  const [agreed, setAgreed] = useState<boolean[]>(() =>
-    waiver.declarations.map(() => false),
-  );
+  const [agreed, setAgreed] = useState(false);
   const [signatureName, setSignatureName] = useState("");
+  const [groupConsent, setGroupConsent] = useState(false);
   const [waiverError, setWaiverError] = useState<{
-    declarations?: string;
+    agree?: string;
     signature?: string;
   }>({});
   const [submitting, setSubmitting] = useState(false);
@@ -235,19 +234,13 @@ export function BookingSheet({
   }
 
   function validateWaiver(): boolean {
-    const next: { declarations?: string; signature?: string } = {};
-    if (!agreed.every(Boolean))
-      next.declarations = "Please accept all declarations to continue";
-    if (!signatureName.trim())
-      next.signature = "Type your full name to sign";
+    const next: { agree?: string; signature?: string } = {};
+    if (!agreed)
+      next.agree = "Please confirm you've read and agree to the waiver";
+    if (!signatureName.trim()) next.signature = "Type your full name to sign";
     setWaiverError(next);
     return Object.keys(next).length === 0;
   }
-
-  const toggleDeclaration = (i: number) => {
-    setAgreed((a) => a.map((v, idx) => (idx === i ? !v : v)));
-    setWaiverError((e) => ({ ...e, declarations: undefined }));
-  };
 
   // The waiver signature we would persist at Stage 6 (held client-side for now).
   const waiverSignature: WaiverSignature = {
@@ -288,6 +281,12 @@ export function BookingSheet({
   // Stripe is configured we redirect to hosted checkout; otherwise the booking
   // is held and we show the confirmation step.
   async function proceedToPayment() {
+    if (guests >= 2 && !groupConsent) {
+      setSubmitError(
+        "Please confirm you have consent from everyone in your group.",
+      );
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
     const result = await startCheckout({
@@ -298,6 +297,7 @@ export function BookingSheet({
       email: details.email,
       phone: details.phone,
       signatureName: signatureName.trim() || null,
+      groupConsent,
     });
 
     if (result.ok) {
@@ -470,34 +470,61 @@ export function BookingSheet({
 
           {step === "waiver" && (
             <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-2">
-                <span className="inline-flex w-fit items-center rounded-md bg-highlight/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-highlight">
-                  Placeholder · replace before launch
-                </span>
-                <p className="text-sm text-muted">{waiver.intro}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm text-muted">
+                  Please read and agree to the waiver.
+                </p>
+                <a
+                  href={waiver.pdfUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="shrink-0 text-xs font-medium text-accent hover:underline"
+                >
+                  Open PDF
+                </a>
               </div>
 
-              <div className="flex flex-col gap-3">
-                {waiver.declarations.map((declaration, i) => (
-                  <label
-                    key={i}
-                    className="flex items-start gap-3 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={agreed[i]}
-                      onChange={() => toggleDeclaration(i)}
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
-                    />
-                    <span>{declaration}</span>
-                  </label>
+              <div className="flex flex-col gap-4 rounded-lg border border-border bg-subtle/40 p-4 text-sm leading-relaxed">
+                <p>{waiver.intro}</p>
+                {waiver.sections.map((section, i) => (
+                  <div key={i} className="flex flex-col gap-1.5">
+                    <p className="font-semibold">{section.heading}</p>
+                    <ul className="flex list-disc flex-col gap-1 pl-5">
+                      {section.items.map((item, j) => (
+                        <li key={j}>
+                          {item.text}
+                          {item.sub && (
+                            <ul className="mt-1 flex list-[circle] flex-col gap-1 pl-5">
+                              {item.sub.map((s, k) => (
+                                <li key={k}>{s}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ))}
-                {waiverError.declarations && (
-                  <span className="text-xs text-red-600">
-                    {waiverError.declarations}
-                  </span>
-                )}
+                <p className="font-medium">{waiver.closing}</p>
               </div>
+
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => {
+                    setAgreed(e.target.checked);
+                    setWaiverError((err) => ({ ...err, agree: undefined }));
+                  }}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+                />
+                <span>I have read and agree to The Tide House waiver.</span>
+              </label>
+              {waiverError.agree && (
+                <span className="-mt-3 text-xs text-red-600">
+                  {waiverError.agree}
+                </span>
+              )}
 
               <Field
                 id="signature"
@@ -534,6 +561,24 @@ export function BookingSheet({
                     : `Signed by ${waiverSignature.signatureName} (v${waiverSignature.version})`}
                 </p>
               </div>
+
+              {guests >= 2 && (
+                <label className="flex items-start gap-3 rounded-lg border border-border p-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={groupConsent}
+                    onChange={(e) => {
+                      setGroupConsent(e.target.checked);
+                      setSubmitError(null);
+                    }}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+                  />
+                  <span>
+                    I confirm I&rsquo;ve shown the waiver to everyone in my group
+                    and have their consent to book on their behalf.
+                  </span>
+                </label>
+              )}
             </div>
           )}
 

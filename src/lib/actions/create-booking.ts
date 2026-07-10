@@ -13,13 +13,20 @@ export interface CreateBookingInput {
   phone: string;
   /** Full-name signature, or null if the waiver was skipped (already signed). */
   signatureName: string | null;
+  /** Lead booker's confirmation of group consent (required for 2+ guests). */
+  groupConsent: boolean;
 }
 
 export type CreateBookingResult =
   | { ok: true; bookingId: string; expiresAt: string }
   | {
       ok: false;
-      reason: "sold_out" | "session_unavailable" | "waiver_required" | "error";
+      reason:
+        | "sold_out"
+        | "session_unavailable"
+        | "waiver_required"
+        | "group_consent_required"
+        | "error";
       message?: string;
     };
 
@@ -31,6 +38,10 @@ export type CreateBookingResult =
 export async function createBooking(
   input: CreateBookingInput,
 ): Promise<CreateBookingResult> {
+  if (input.guests >= 2 && !input.groupConsent) {
+    return { ok: false, reason: "group_consent_required" };
+  }
+
   const sb = createServiceClient();
 
   const { data, error } = await sb.rpc("create_booking", {
