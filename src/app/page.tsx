@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { tenant } from "@/config/tenant.config";
 import {
   formatPrice,
@@ -58,8 +59,6 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
   const { openTime, lastSlotTime, daysOfWeek } = tenant.scheduling;
   const pass = tenant.bundles[0];
 
-  const services = tenant.features.map((f) => f.label).join("   ·   ");
-
   return (
     <section className="w-full border-b border-border">
       <div className="grid md:min-h-[74vh] md:grid-cols-[43%_57%]">
@@ -72,9 +71,6 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
             <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted sm:text-sm">
               {hero.subCaption}
             </span>
-            <p className="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-[#c2a06a] sm:text-sm">
-              {services}
-            </p>
           </div>
 
           <a
@@ -122,6 +118,63 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function SiteFooter() {
+  const year = new Date().getFullYear();
+  return (
+    <footer className="border-t border-border bg-[#f5eee6]">
+      <div
+        className={cn(
+          BOUNDS,
+          "flex flex-col gap-6 py-9 sm:flex-row sm:items-start sm:justify-between",
+        )}
+      >
+        <div className="flex flex-col gap-1.5">
+          <p className="text-sm font-semibold tracking-tight">{tenant.name}</p>
+          <p className="text-sm text-muted">{tenant.address}</p>
+          <a
+            href={`mailto:${tenant.contactEmail}`}
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            {tenant.contactEmail}
+          </a>
+        </div>
+
+        <nav
+          aria-label="Legal"
+          className="flex flex-col gap-2 text-sm text-muted sm:items-end"
+        >
+          <Link
+            href="/privacy"
+            className="transition-colors hover:text-foreground"
+          >
+            Privacy Policy
+          </Link>
+          <Link
+            href="/terms"
+            className="transition-colors hover:text-foreground"
+          >
+            Terms &amp; Conditions
+          </Link>
+          <a
+            href={tenant.waiver.pdfUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="transition-colors hover:text-foreground"
+          >
+            Waiver
+          </a>
+        </nav>
+      </div>
+
+      <div className={cn(BOUNDS, "border-t border-border/60 py-4")}>
+        <p className="text-xs text-muted">
+          © {year} {tenant.name}. All rights reserved.
+        </p>
+      </div>
+    </footer>
   );
 }
 
@@ -199,6 +252,8 @@ export default async function BookingPage() {
       </main>
 
       <FeatureStrip features={tenant.features} />
+
+      <SiteFooter />
     </div>
   );
 }
