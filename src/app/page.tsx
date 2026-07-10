@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { tenant } from "@/config/tenant.config";
 import {
   formatPrice,
@@ -58,41 +59,58 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
   const pass = tenant.bundles[0];
 
   return (
-    <section className={cn(BOUNDS, "pt-10 pb-12 sm:pt-16")}>
-      <div className="flex max-w-4xl flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
-            {hero.headline}
-          </h1>
-          <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-            {hero.subCaption}
-          </span>
+    <section className={cn(BOUNDS, "pt-8 pb-12 sm:pt-10")}>
+      <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+        {/* Sauna image — on top when stacked (mobile), right on desktop */}
+        <div className="order-first md:order-last">
+          <div className="relative aspect-[16/11] w-full overflow-hidden rounded-2xl bg-accent/5 shadow-sm ring-1 ring-black/5 md:aspect-[4/5]">
+            <Image
+              src="/tidehouse-sauna.png"
+              alt="Inside the Tide House sauna"
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+            />
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full bg-accent px-5 py-2.5 text-sm text-white">
-            <span className="font-semibold">{price}pp</span>
-            <span className="text-[#c2a06a]">|</span>
-            <span>
-              {openTime}–{lastSlotTime}
+        {/* Copy + CTAs */}
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
+              {hero.headline}
+            </h1>
+            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+              {hero.subCaption}
             </span>
-            <span className="text-[#c2a06a]">|</span>
-            <span>{daysOfWeek.length} days p/w</span>
-          </span>
+          </div>
 
-          {pass && (
-            <BuyPass
-              canBuyOnline={canBuyOnline}
-              className="text-sm font-medium text-accent underline-offset-4 hover:underline"
-            >
-              Or save with a {pass.sessions}-visit pass —{" "}
-              {formatPrice(pass.priceMinor, tenant.currency)}
-              {pass.validityMonths > 0
-                ? `, valid ${pass.validityMonths} months`
-                : ""}{" "}
-              &rarr;
-            </BuyPass>
-          )}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full bg-accent px-5 py-2.5 text-sm text-white">
+              <span className="font-semibold">{price}pp</span>
+              <span className="text-[#c2a06a]">|</span>
+              <span>
+                {openTime}–{lastSlotTime}
+              </span>
+              <span className="text-[#c2a06a]">|</span>
+              <span>{daysOfWeek.length} days p/w</span>
+            </span>
+
+            {pass && (
+              <BuyPass
+                canBuyOnline={canBuyOnline}
+                className="text-sm font-medium text-accent underline-offset-4 hover:underline"
+              >
+                Or save with a {pass.sessions}-visit pass —{" "}
+                {formatPrice(pass.priceMinor, tenant.currency)}
+                {pass.validityMonths > 0
+                  ? `, valid ${pass.validityMonths} months`
+                  : ""}{" "}
+                &rarr;
+              </BuyPass>
+            )}
+          </div>
         </div>
       </div>
     </section>
