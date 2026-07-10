@@ -61,7 +61,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
   const services = tenant.features.map((f) => f.label).join("   ·   ");
 
   return (
-    <section className="w-full">
+    <section className="w-full border-b border-border">
       <div className="grid md:min-h-[74vh] md:grid-cols-[43%_57%]">
         {/* Copy column — aligned to the page gutter, vertically centred */}
         <div className="order-2 flex flex-col justify-center gap-6 px-5 py-9 sm:px-8 md:order-1 md:py-14 md:pr-12 md:pl-[max(2rem,calc((100vw-72rem)/2+2rem))]">
@@ -188,7 +188,7 @@ export default async function BookingPage() {
 
       <Hero canBuyOnline={canBuyOnline} />
 
-      <main id="book" className="flex-1 scroll-mt-4">
+      <main className="flex-1">
         <BookingView
           services={services}
           slots={slots}

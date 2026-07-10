@@ -194,8 +194,8 @@ export function BookingView({
     .filter((group) => group.slots.length > 0);
 
   return (
-    <section id="book" className="scroll-mt-4 pt-2">
-      <div className={cn(BOUNDS, "border-t border-border pt-8")}>
+    <section id="book" className="scroll-mt-4 bg-subtle pb-6 pt-2">
+      <div className={cn(BOUNDS, "pt-8")}>
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted">
           Choose a date
         </p>
