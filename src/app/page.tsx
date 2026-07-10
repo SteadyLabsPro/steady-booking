@@ -124,7 +124,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
 function SiteFooter() {
   const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-border bg-[#f5eee6]">
+    <footer className="bg-accent text-white">
       <div
         className={cn(
           BOUNDS,
@@ -133,10 +133,10 @@ function SiteFooter() {
       >
         <div className="flex flex-col gap-1.5">
           <p className="text-sm font-semibold tracking-tight">{tenant.name}</p>
-          <p className="text-sm text-muted">{tenant.address}</p>
+          <p className="text-sm text-white/70">{tenant.address}</p>
           <a
             href={`mailto:${tenant.contactEmail}`}
-            className="text-sm text-muted transition-colors hover:text-foreground"
+            className="text-sm text-white/70 transition-colors hover:text-white"
           >
             {tenant.contactEmail}
           </a>
@@ -144,33 +144,27 @@ function SiteFooter() {
 
         <nav
           aria-label="Legal"
-          className="flex flex-col gap-2 text-sm text-muted sm:items-end"
+          className="flex flex-col gap-2 text-sm text-white/70 sm:items-end"
         >
-          <Link
-            href="/privacy"
-            className="transition-colors hover:text-foreground"
-          >
+          <Link href="/privacy" className="transition-colors hover:text-white">
             Privacy Policy
           </Link>
-          <Link
-            href="/terms"
-            className="transition-colors hover:text-foreground"
-          >
+          <Link href="/terms" className="transition-colors hover:text-white">
             Terms &amp; Conditions
           </Link>
           <a
             href={tenant.waiver.pdfUrl}
             target="_blank"
             rel="noreferrer"
-            className="transition-colors hover:text-foreground"
+            className="transition-colors hover:text-white"
           >
             Waiver
           </a>
         </nav>
       </div>
 
-      <div className={cn(BOUNDS, "border-t border-border/60 py-4")}>
-        <p className="text-xs text-muted">
+      <div className={cn(BOUNDS, "border-t border-white/15 py-4")}>
+        <p className="text-xs text-white/60">
           © {year} {tenant.name}. All rights reserved.
         </p>
       </div>
