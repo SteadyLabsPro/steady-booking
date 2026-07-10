@@ -56,7 +56,7 @@ function Logo() {
 function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
   const { hero } = tenant;
   const price = formatPrice(tenant.pricing.sessionPriceMinor, tenant.currency);
-  const { openTime, lastSlotTime, daysOfWeek } = tenant.scheduling;
+  const { openTime, lastSlotTime, daysOfWeek, slotMinutes } = tenant.scheduling;
   const pass = tenant.bundles[0];
 
   return (
@@ -73,13 +73,18 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
             </span>
           </div>
 
-          <a
-            href="#book"
-            className="inline-flex w-fit items-center gap-2 rounded-md bg-accent px-7 py-3.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
-          >
-            Book a session
-            <Icon name="chevron-right" className="h-4 w-4 rotate-90" />
-          </a>
+          <div className="flex w-fit flex-col items-center gap-1.5">
+            <a
+              href="#book"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-accent px-7 py-3.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
+            >
+              Book a session
+              <Icon name="chevron-right" className="h-4 w-4 rotate-90" />
+            </a>
+            <span className="text-xs text-muted">
+              {price} pp / {slotMinutes} min
+            </span>
+          </div>
 
           <div className="flex flex-col gap-3 pt-1">
             <hr className="w-full max-w-xs border-t border-border" />
