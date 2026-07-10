@@ -59,24 +59,24 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
   const pass = tenant.bundles[0];
 
   return (
-    <section className={cn(BOUNDS, "pt-8 pb-12 sm:pt-10")}>
-      <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
-        {/* Sauna image — on top when stacked (mobile), right on desktop */}
+    <section className={cn(BOUNDS, "pt-6 pb-8")}>
+      <div className="grid items-center gap-5 md:grid-cols-2 md:gap-10">
+        {/* Sauna image — a short banner; on top when stacked (mobile), right on desktop */}
         <div className="order-first md:order-last">
-          <div className="relative aspect-[16/11] w-full overflow-hidden rounded-2xl bg-accent/5 shadow-sm ring-1 ring-black/5 md:aspect-[4/5]">
+          <div className="relative h-40 w-full overflow-hidden rounded-2xl bg-accent/5 shadow-sm ring-1 ring-black/5 sm:h-44 md:h-56">
             <Image
               src="/tidehouse-sauna.png"
               alt="Inside the Tide House sauna"
               fill
               priority
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
+              className="object-cover object-[center_35%]"
             />
           </div>
         </div>
 
         {/* Copy + CTAs */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
               {hero.headline}
