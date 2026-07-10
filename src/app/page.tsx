@@ -14,7 +14,6 @@ import {
   type SlotView,
   type ServiceView,
 } from "@/components/booking/booking-view";
-import { FeatureStrip } from "@/components/booking/feature-strip";
 import { BuyPass } from "@/components/booking/buy-pass";
 import { isStripeConfigured } from "@/lib/payments/stripe";
 
@@ -208,7 +207,7 @@ export default async function BookingPage() {
     });
 
   return (
-    <div className="flex min-h-dvh flex-col pb-24 md:pb-0">
+    <div className="flex min-h-dvh flex-col">
       <header className="border-b border-[#c2a06a]/70 bg-[#f5eee6]">
         <div
           className={cn(BOUNDS, "flex items-center justify-between gap-3 py-4")}
@@ -244,8 +243,6 @@ export default async function BookingPage() {
           waiver={tenant.waiver}
         />
       </main>
-
-      <FeatureStrip features={tenant.features} />
 
       <SiteFooter />
     </div>
