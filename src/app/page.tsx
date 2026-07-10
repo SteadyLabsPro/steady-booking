@@ -58,61 +58,64 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
   const { openTime, lastSlotTime, daysOfWeek } = tenant.scheduling;
   const pass = tenant.bundles[0];
 
-  return (
-    <section className={cn(BOUNDS, "pt-6 pb-8")}>
-      <div className="grid items-center gap-5 md:grid-cols-2 md:gap-10">
-        {/* Sauna image — a short banner; on top when stacked (mobile), right on desktop */}
-        <div className="order-first md:order-last">
-          <div className="relative h-40 w-full overflow-hidden rounded-2xl bg-accent/5 shadow-sm ring-1 ring-black/5 sm:h-44 md:h-56">
-            <Image
-              src="/tidehouse-sauna.png"
-              alt="Inside the Tide House sauna"
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-[center_35%]"
-            />
-          </div>
-        </div>
+  const services = tenant.features.map((f) => f.label).join("   ·   ");
 
-        {/* Copy + CTAs */}
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
+  return (
+    <section className="w-full">
+      <div className="grid md:min-h-[74vh] md:grid-cols-[43%_57%]">
+        {/* Copy column — aligned to the page gutter, vertically centred */}
+        <div className="order-2 flex flex-col justify-center gap-6 px-5 py-9 sm:px-8 md:order-1 md:py-14 md:pr-12 md:pl-[max(2rem,calc((100vw-72rem)/2+2rem))]">
+          <div className="flex flex-col gap-4">
             <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
               {hero.headline}
             </h1>
-            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-              {hero.subCaption}
-            </span>
-          </div>
-
-          <div className="flex flex-col items-start gap-3">
-            {/* Details as plain text */}
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
-              <span className="font-semibold text-foreground">{price}pp</span>
-              <span className="text-[#c2a06a]">|</span>
-              <span>
-                {openTime}–{lastSlotTime}
-              </span>
-              <span className="text-[#c2a06a]">|</span>
-              <span>{daysOfWeek.length} days p/w</span>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#c2a06a] sm:text-sm">
+              {services}
             </p>
-
-            {/* Pass offer as the CTA pill */}
-            {pass && (
-              <BuyPass
-                canBuyOnline={canBuyOnline}
-                className="inline-flex w-fit items-center rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent/90"
-              >
-                Save with a {pass.sessions}-visit pass —{" "}
-                {formatPrice(pass.priceMinor, tenant.currency)}
-                {pass.validityMonths > 0
-                  ? `, valid ${pass.validityMonths} months`
-                  : ""}{" "}
-                &rarr;
-              </BuyPass>
-            )}
           </div>
+
+          <a
+            href="#book"
+            className="inline-flex w-fit items-center rounded-md bg-accent px-7 py-3.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
+          >
+            Book a session
+          </a>
+
+          <div className="flex flex-col gap-3 pt-1">
+            <hr className="w-full max-w-xs border-t border-border" />
+            <div className="text-sm text-muted">
+              <span className="font-semibold text-foreground">{price}pp</span> ·{" "}
+              {openTime}–{lastSlotTime} · {daysOfWeek.length} days a week.
+              {pass && (
+                <>
+                  {" "}
+                  <BuyPass
+                    canBuyOnline={canBuyOnline}
+                    className="font-medium text-accent underline-offset-4 hover:underline"
+                  >
+                    Or save with a {pass.sessions}-visit pass —{" "}
+                    {formatPrice(pass.priceMinor, tenant.currency)}
+                    {pass.validityMonths > 0
+                      ? `, valid ${pass.validityMonths} months`
+                      : ""}{" "}
+                    &rarr;
+                  </BuyPass>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Full-bleed image — on top when stacked (mobile), right on desktop */}
+        <div className="relative order-1 h-56 w-full sm:h-72 md:order-2 md:h-auto">
+          <Image
+            src="/tidehouse-sauna.png"
+            alt="Inside the Tide House sauna"
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 57vw"
+            className="object-cover object-center"
+          />
         </div>
       </div>
     </section>
@@ -182,7 +185,7 @@ export default async function BookingPage() {
 
       <Hero canBuyOnline={canBuyOnline} />
 
-      <main className="flex-1">
+      <main id="book" className="flex-1 scroll-mt-4">
         <BookingView
           services={services}
           slots={slots}
