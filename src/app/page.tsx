@@ -86,23 +86,25 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full bg-accent px-5 py-2.5 text-sm text-white">
-              <span className="font-semibold">{price}pp</span>
+          <div className="flex flex-col items-start gap-3">
+            {/* Details as plain text */}
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+              <span className="font-semibold text-foreground">{price}pp</span>
               <span className="text-[#c2a06a]">|</span>
               <span>
                 {openTime}–{lastSlotTime}
               </span>
               <span className="text-[#c2a06a]">|</span>
               <span>{daysOfWeek.length} days p/w</span>
-            </span>
+            </p>
 
+            {/* Pass offer as the CTA pill */}
             {pass && (
               <BuyPass
                 canBuyOnline={canBuyOnline}
-                className="text-sm font-medium text-accent underline-offset-4 hover:underline"
+                className="inline-flex w-fit items-center rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent/90"
               >
-                Or save with a {pass.sessions}-visit pass —{" "}
+                Save with a {pass.sessions}-visit pass —{" "}
                 {formatPrice(pass.priceMinor, tenant.currency)}
                 {pass.validityMonths > 0
                   ? `, valid ${pass.validityMonths} months`
