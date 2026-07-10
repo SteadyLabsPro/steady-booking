@@ -73,41 +73,43 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
             </span>
           </div>
 
-          <div className="flex w-fit flex-col items-center gap-1.5">
-            <a
-              href="#book"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-accent px-7 py-3.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
-            >
-              Book a session
-              <Icon name="chevron-right" className="h-4 w-4 rotate-90" />
-            </a>
-            <span className="text-xs text-muted">
-              {price} pp / {slotMinutes} min
-            </span>
+          <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start">
+            {/* Primary — book a single session */}
+            <div className="flex flex-col items-center gap-1.5">
+              <a
+                href="#book"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-accent px-7 py-3.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
+              >
+                Book a session
+                <Icon name="chevron-right" className="h-4 w-4 rotate-90" />
+              </a>
+              <span className="text-xs text-muted">
+                {price} pp / {slotMinutes} min
+              </span>
+            </div>
+
+            {/* Secondary — buy a pass */}
+            {pass && (
+              <div className="flex flex-col items-center gap-1.5">
+                <BuyPass
+                  canBuyOnline={canBuyOnline}
+                  className="inline-flex w-full items-center justify-center rounded-md bg-[#c2a06a] px-7 py-3.5 text-sm font-medium uppercase tracking-wide text-accent transition-colors hover:bg-[#b5934f]"
+                >
+                  {pass.sessions}-session pass
+                </BuyPass>
+                <span className="text-xs text-muted">
+                  only {formatPrice(pass.priceMinor, tenant.currency)}
+                  {pass.validityMonths > 0
+                    ? ` · valid ${pass.validityMonths} months`
+                    : ""}
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-col gap-3 pt-1">
-            <hr className="w-full max-w-xs border-t border-border" />
-            <div className="text-sm text-muted">
-              {openTime}–{lastSlotTime} · {daysOfWeek.length} days a week.
-              {pass && (
-                <>
-                  {" "}
-                  <BuyPass
-                    canBuyOnline={canBuyOnline}
-                    className="font-medium text-accent underline-offset-4 hover:underline"
-                  >
-                    Or save with a {pass.sessions}-visit pass —{" "}
-                    {formatPrice(pass.priceMinor, tenant.currency)}
-                    {pass.validityMonths > 0
-                      ? `, valid ${pass.validityMonths} months`
-                      : ""}{" "}
-                    &rarr;
-                  </BuyPass>
-                </>
-              )}
-            </div>
-          </div>
+          <p className="text-sm text-muted">
+            Open {openTime}–{lastSlotTime}, {daysOfWeek.length} days a week.
+          </p>
         </div>
 
         {/* Full-bleed image — on top when stacked (mobile), right on desktop */}
