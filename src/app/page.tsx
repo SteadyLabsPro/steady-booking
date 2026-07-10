@@ -65,11 +65,14 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
       <div className="grid md:min-h-[74vh] md:grid-cols-[43%_57%]">
         {/* Copy column — aligned to the page gutter, vertically centred */}
         <div className="order-2 flex flex-col justify-center gap-6 px-5 py-9 sm:px-8 md:order-1 md:py-14 md:pr-12 md:pl-[max(2rem,calc((100vw-72rem)/2+2rem))]">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
               {hero.headline}
             </h1>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#c2a06a] sm:text-sm">
+            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted sm:text-sm">
+              {hero.subCaption}
+            </span>
+            <p className="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-[#c2a06a] sm:text-sm">
               {services}
             </p>
           </div>
