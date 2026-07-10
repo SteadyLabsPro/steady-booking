@@ -50,17 +50,18 @@ export default function TermsPage() {
         </LegalSection>
       )}
 
-      <LegalSection heading="Cancellations & changes">
+      <LegalSection heading="Cancellations & refunds">
         <p>
-          If you need to change or cancel a booking, please contact us as early
-          as possible at{" "}
+          Bookings are non-refundable. Refunds are only given where agreed with a
+          manager. If you need to change or cancel a booking, or wish to request
+          a refund, please write to us at{" "}
           <a
             href={`mailto:${tenant.contactEmail}`}
             className="font-medium text-accent hover:underline"
           >
             {tenant.contactEmail}
-          </a>
-          . Our cancellation window and any refund terms will be confirmed here.
+          </a>{" "}
+          and we will consider your request.
         </p>
       </LegalSection>
 
