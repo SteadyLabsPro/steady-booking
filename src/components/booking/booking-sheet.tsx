@@ -204,6 +204,7 @@ export function BookingSheet({
   const [passInfo, setPassInfo] = useState<{
     passId: string;
     remaining: number;
+    expiresAt: string | null;
   } | null>(null);
   const [paidWithPass, setPaidWithPass] = useState(false);
   const [passRemaining, setPassRemaining] = useState<number | null>(null);
@@ -310,6 +311,8 @@ export function BookingSheet({
       setSubmitError("Sorry — that slot just filled up. Please choose another.");
     } else if (result.reason === "insufficient_credits") {
       setSubmitError("Your pass doesn't have enough credits for this booking.");
+    } else if (result.reason === "pass_expired") {
+      setSubmitError("Your pass has expired. Please pay for this session.");
     } else {
       setSubmitError("Something went wrong. Please try again.");
     }
@@ -638,6 +641,14 @@ export function BookingSheet({
                     {passInfo.remaining} credit
                     {passInfo.remaining === 1 ? "" : "s"} left · this booking
                     uses {guests}.
+                    {passInfo.expiresAt &&
+                      ` Valid until ${new Date(
+                        passInfo.expiresAt,
+                      ).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}.`}
                   </p>
                 </div>
               )}

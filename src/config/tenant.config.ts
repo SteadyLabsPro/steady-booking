@@ -34,6 +34,7 @@ export const tenant: TenantConfig = {
       label: "10-session block",
       sessions: 10,
       priceMinor: 8000, // £80
+      validityMonths: 6, // valid 6 months from purchase
     },
   ],
   hero: {

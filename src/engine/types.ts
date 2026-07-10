@@ -44,6 +44,8 @@ export interface Bundle {
   sessions: number;
   /** Total price in integer minor units. */
   priceMinor: number;
+  /** How long the pass stays valid after purchase, in months (0 = no expiry). */
+  validityMonths: number;
 }
 
 /** Pricing rules. Per-session prices live on sessions; this is the default. */

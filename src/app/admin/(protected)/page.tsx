@@ -13,6 +13,7 @@ import {
 import { getRevenueSummary } from "@/lib/admin/revenue";
 import { CancelBookingButton } from "@/components/admin/cancel-booking-button";
 import { AddBooking } from "@/components/admin/add-booking";
+import { SellPass } from "@/components/admin/sell-pass";
 
 // Live booking data — never cache.
 export const dynamic = "force-dynamic";
@@ -136,7 +137,10 @@ export default async function AdminDashboardPage({
             date
           </p>
         </div>
-        <AddBooking sessions={bookableSessions} />
+        <div className="flex shrink-0 gap-2">
+          <SellPass />
+          <AddBooking sessions={bookableSessions} />
+        </div>
       </div>
 
       <div className="flex w-fit gap-1 rounded-lg border border-border bg-subtle p-1">

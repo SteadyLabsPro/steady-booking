@@ -4,10 +4,14 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { tenant } from "@/config/tenant.config";
 import { sendBookingConfirmation } from "@/lib/email/booking-confirmation";
 
-/** An active pass for a customer, found by email. */
+/** An active (unexpired, non-empty) pass for a customer, found by email. */
 export async function getActivePass(
   email: string,
-): Promise<{ passId: string; remaining: number } | null> {
+): Promise<{
+  passId: string;
+  remaining: number;
+  expiresAt: string | null;
+} | null> {
   const normalized = email.trim().toLowerCase();
   if (!normalized) return null;
 
@@ -20,17 +24,24 @@ export async function getActivePass(
       .maybeSingle();
     if (!customer) return null;
 
+    // Soonest-to-expire pass first, so credits are spent before they lapse.
+    const nowIso = new Date().toISOString();
     const { data: pass } = await sb
       .from("passes")
-      .select("id, remaining_credits")
+      .select("id, remaining_credits, expires_at")
       .eq("customer_id", customer.id)
       .gt("remaining_credits", 0)
-      .order("created_at", { ascending: true })
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+      .order("expires_at", { ascending: true, nullsFirst: false })
       .limit(1)
       .maybeSingle();
     if (!pass) return null;
 
-    return { passId: pass.id, remaining: pass.remaining_credits };
+    return {
+      passId: pass.id,
+      remaining: pass.remaining_credits,
+      expiresAt: pass.expires_at,
+    };
   } catch {
     return null;
   }
@@ -52,6 +63,7 @@ export type RedeemPassResult =
       ok: false;
       reason:
         | "insufficient_credits"
+        | "pass_expired"
         | "sold_out"
         | "session_unavailable"
         | "group_consent_required"
@@ -98,11 +110,13 @@ export async function redeemPass(
     const msg = error.message ?? "";
     const reason = msg.includes("insufficient_credits")
       ? "insufficient_credits"
-      : msg.includes("sold_out")
-        ? "sold_out"
-        : msg.includes("session_unavailable")
-          ? "session_unavailable"
-          : "error";
+      : msg.includes("pass_expired")
+        ? "pass_expired"
+        : msg.includes("sold_out")
+          ? "sold_out"
+          : msg.includes("session_unavailable")
+            ? "session_unavailable"
+            : "error";
     return { ok: false, reason, message: msg };
   }
 
