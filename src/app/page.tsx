@@ -215,22 +215,9 @@ export default async function BookingPage() {
           className={cn(BOUNDS, "flex items-center justify-between gap-3 py-4")}
         >
           <Logo />
-          <div className="flex items-center gap-3">
-            <span className="hidden text-right text-xs font-medium uppercase leading-tight tracking-[0.2em] text-muted sm:block">
-              {tenant.descriptor}
-            </span>
-            <BuyPass
-              canBuyOnline={canBuyOnline}
-              className="inline-flex shrink-0 items-center rounded-full bg-accent px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-accent/90 sm:text-sm"
-            >
-              <span className="hidden sm:inline">
-                10-visit pass · {formatPrice(tenant.bundles[0]?.priceMinor ?? 0, tenant.currency)}
-              </span>
-              <span className="sm:hidden">
-                {formatPrice(tenant.bundles[0]?.priceMinor ?? 0, tenant.currency)} pass
-              </span>
-            </BuyPass>
-          </div>
+          <span className="text-right text-[10px] font-medium uppercase leading-tight tracking-[0.14em] text-muted sm:text-xs sm:tracking-[0.2em]">
+            {tenant.descriptor}
+          </span>
         </div>
       </header>
 
