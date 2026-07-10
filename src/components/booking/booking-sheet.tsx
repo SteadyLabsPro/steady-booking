@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/icons";
 import { startCheckout } from "@/lib/actions/checkout";
 import { checkWaiverNeeded } from "@/lib/actions/check-waiver";
+import { getActivePass, redeemPass } from "@/lib/actions/pass";
 
 /**
  * Booking sheet — the step-based flow that opens when a slot is selected.
@@ -200,7 +201,14 @@ export function BookingSheet({
   const [bookingRef, setBookingRef] = useState<string | null>(null);
   const [checkingWaiver, setCheckingWaiver] = useState(false);
   const [waiverAlreadySigned, setWaiverAlreadySigned] = useState(false);
+  const [passInfo, setPassInfo] = useState<{
+    passId: string;
+    remaining: number;
+  } | null>(null);
+  const [paidWithPass, setPaidWithPass] = useState(false);
+  const [passRemaining, setPassRemaining] = useState<number | null>(null);
   const max = Math.max(1, slot.remaining);
+  const canUsePass = passInfo !== null && passInfo.remaining >= guests;
 
   // Close on Escape; lock body scroll while open.
   useEffect(() => {
@@ -255,14 +263,55 @@ export function BookingSheet({
     if (!validateDetails()) return;
     setCheckingWaiver(true);
     try {
-      const { needsWaiver } = await checkWaiverNeeded(details.email);
-      setWaiverAlreadySigned(!needsWaiver);
-      setStep(needsWaiver ? "waiver" : "review");
+      const [waiverRes, pass] = await Promise.all([
+        checkWaiverNeeded(details.email),
+        getActivePass(details.email),
+      ]);
+      setWaiverAlreadySigned(!waiverRes.needsWaiver);
+      setPassInfo(pass);
+      setStep(waiverRes.needsWaiver ? "waiver" : "review");
     } catch {
       setWaiverAlreadySigned(false);
+      setPassInfo(null);
       setStep("waiver");
     } finally {
       setCheckingWaiver(false);
+    }
+  }
+
+  // Redeem a pass credit instead of paying.
+  async function proceedWithPass() {
+    if (!passInfo) return;
+    if (guests >= 2 && !groupConsent) {
+      setSubmitError(
+        "Please confirm you have consent from everyone in your group.",
+      );
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError(null);
+    const result = await redeemPass({
+      passId: passInfo.passId,
+      sessionId: slot.id,
+      guests,
+      email: details.email,
+      signatureName: signatureName.trim() || null,
+      groupConsent,
+    });
+    setSubmitting(false);
+    if (result.ok) {
+      setPaidWithPass(true);
+      setPassRemaining(result.remaining);
+      setBookingRef(result.bookingId);
+      setStep("confirmation");
+      return;
+    }
+    if (result.reason === "sold_out") {
+      setSubmitError("Sorry — that slot just filled up. Please choose another.");
+    } else if (result.reason === "insufficient_credits") {
+      setSubmitError("Your pass doesn't have enough credits for this booking.");
+    } else {
+      setSubmitError("Something went wrong. Please try again.");
     }
   }
 
@@ -579,6 +628,19 @@ export function BookingSheet({
                   </span>
                 </label>
               )}
+
+              {canUsePass && passInfo && (
+                <div className="flex flex-col gap-0.5 rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm">
+                  <p className="font-medium text-accent">
+                    You have a 10-visit pass
+                  </p>
+                  <p className="text-muted">
+                    {passInfo.remaining} credit
+                    {passInfo.remaining === 1 ? "" : "s"} left · this booking
+                    uses {guests}.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -591,7 +653,9 @@ export function BookingSheet({
                 <h3 className="text-lg font-semibold tracking-tight">
                   You&rsquo;re all set, {details.firstName}
                 </h3>
-                <p className="text-sm text-muted">Your spot is held.</p>
+                <p className="text-sm text-muted">
+                  {paidWithPass ? "Your booking is confirmed." : "Your spot is held."}
+                </p>
               </div>
               <div className="w-full text-left">
                 <BookingSummary
@@ -609,9 +673,9 @@ export function BookingSheet({
                 </p>
               )}
               <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted">
-                Your spot is held while payment is set up. Card payment (Stripe)
-                and your confirmation email (Resend) arrive in the next stages —
-                nothing has been charged yet.
+                {paidWithPass
+                  ? `Paid with your 10-visit pass — ${passRemaining} credit${passRemaining === 1 ? "" : "s"} left. A confirmation email is on its way.`
+                  : "Your spot is held while payment is set up. Card payment (Stripe) and your confirmation email (Resend) arrive when configured — nothing has been charged yet."}
               </p>
             </div>
           )}
@@ -650,14 +714,35 @@ export function BookingSheet({
               {submitError && (
                 <p className="text-sm text-red-600">{submitError}</p>
               )}
-              <Button
-                fullWidth
-                size="lg"
-                onClick={proceedToPayment}
-                disabled={submitting}
-              >
-                {submitting ? "Booking…" : "Proceed to payment"}
-              </Button>
+              {canUsePass ? (
+                <>
+                  <Button
+                    fullWidth
+                    size="lg"
+                    onClick={proceedWithPass}
+                    disabled={submitting}
+                  >
+                    {submitting ? "Confirming…" : "Use pass & confirm"}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={proceedToPayment}
+                    disabled={submitting}
+                    className="text-center text-sm text-muted transition-colors hover:text-foreground disabled:opacity-50"
+                  >
+                    Pay {formatPrice(slot.priceMinor * guests, currency)} instead
+                  </button>
+                </>
+              ) : (
+                <Button
+                  fullWidth
+                  size="lg"
+                  onClick={proceedToPayment}
+                  disabled={submitting}
+                >
+                  {submitting ? "Booking…" : "Proceed to payment"}
+                </Button>
+              )}
             </>
           )}
           {step === "confirmation" && (
