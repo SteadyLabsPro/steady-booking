@@ -10,7 +10,7 @@ export const tenant: TenantConfig = {
   name: "The Tide House",
   descriptor: "Sauna & Cold Plunge",
   address: "Advantage Padel, Mudeford",
-  tagline: "Sauna & cold plunge by the sea.",
+  tagline: "Hot coal sauna & cold plunge.",
   contactEmail: "hello@thetidehouse.co.uk",
   currency: "GBP",
   timezone: "Europe/London",
@@ -42,9 +42,8 @@ export const tenant: TenantConfig = {
     subcopy: "Finnish sauna and ice-cold plunge tubs",
   },
   features: [
-    { label: "Wood-fired sauna", icon: "sauna" },
-    { label: "Cold plunge", icon: "plunge" },
-    { label: "By the sea", icon: "sea" },
+    { label: "Hot coal sauna", icon: "sauna" },
+    { label: "2 cold plunges", icon: "plunge" },
     { label: "Private sessions", icon: "private" },
   ],
   waiver: {

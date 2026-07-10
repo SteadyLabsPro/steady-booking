@@ -6,11 +6,17 @@ import type { TenantFeature } from "@/engine";
  * fixed bottom bar on mobile. Presentational only (no navigation yet).
  */
 export function FeatureStrip({ features }: { features: TenantFeature[] }) {
+  const cols = {
+    gridTemplateColumns: `repeat(${features.length}, minmax(0, 1fr))`,
+  };
   return (
     <>
       {/* Desktop: inline footer */}
       <footer className="mt-12 hidden border-t border-border md:block">
-        <div className="mx-auto grid max-w-6xl grid-cols-4 gap-4 px-8 py-6">
+        <div
+          className="mx-auto grid max-w-6xl gap-4 px-8 py-6"
+          style={cols}
+        >
           {features.map((feature) => (
             <div
               key={feature.label}
@@ -29,7 +35,7 @@ export function FeatureStrip({ features }: { features: TenantFeature[] }) {
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="grid grid-cols-4">
+        <div className="grid" style={cols}>
           {features.map((feature) => (
             <div
               key={feature.label}
