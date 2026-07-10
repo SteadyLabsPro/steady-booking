@@ -15,6 +15,7 @@ import {
   type ServiceView,
 } from "@/components/booking/booking-view";
 import { BuyPass } from "@/components/booking/buy-pass";
+import { Icon } from "@/components/icons";
 import { isStripeConfigured } from "@/lib/payments/stripe";
 
 /**
@@ -74,9 +75,10 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
 
           <a
             href="#book"
-            className="inline-flex w-fit items-center rounded-md bg-accent px-7 py-3.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
+            className="inline-flex w-fit items-center gap-2 rounded-md bg-accent px-7 py-3.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
           >
             Book a session
+            <Icon name="chevron-right" className="h-4 w-4 rotate-90" />
           </a>
 
           <div className="flex flex-col gap-3 pt-1">
