@@ -89,7 +89,6 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
           <div className="flex flex-col gap-3 pt-1">
             <hr className="w-full max-w-xs border-t border-border" />
             <div className="text-sm text-muted">
-              <span className="font-semibold text-foreground">{price}pp</span> ·{" "}
               {openTime}–{lastSlotTime} · {daysOfWeek.length} days a week.
               {pass && (
                 <>
