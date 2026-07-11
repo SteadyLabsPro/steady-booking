@@ -31,11 +31,17 @@ export async function sendEmail(params: {
   to: string;
   subject: string;
   html: string;
-}): Promise<void> {
-  await resend().emails.send({
+}): Promise<{ id: string }> {
+  // The Resend SDK returns { data, error } rather than throwing on API errors
+  // (e.g. an unverified from-domain), so surface those as thrown errors.
+  const { data, error } = await resend().emails.send({
     from: fromAddress(),
     to: params.to,
     subject: params.subject,
     html: params.html,
   });
+  if (error) {
+    throw new Error(`Resend send failed: ${error.message ?? JSON.stringify(error)}`);
+  }
+  return { id: data?.id ?? "" };
 }
