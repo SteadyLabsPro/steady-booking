@@ -350,29 +350,80 @@ export function BookingView({
 
   const tomorrowKey = useMemo(() => addDaysKey(todayKey, 1), [todayKey]);
 
-  // The scroller shows a paged window of DAYS_VISIBLE days; arrows move it
-  // across the whole bookable horizon, loading each month lazily as it enters.
-  const [windowStart, setWindowStart] = useState(todayKey);
-
+  // Full bookable window (today → horizon). The strip scrolls through it; the
+  // arrows nudge it by ~a screenful and months load lazily as they appear, so
+  // paging reveals the next dates contiguously (no fortnight-sized jumps).
   const dateKeys = useMemo(() => {
     const out: string[] = [];
-    for (let i = 0; i < DAYS_VISIBLE; i++) {
-      const k = addDaysKey(windowStart, i);
+    for (let i = 0; ; i++) {
+      const k = addDaysKey(todayKey, i);
       if (k > horizonKey) break;
       out.push(k);
     }
     return out;
-  }, [windowStart, horizonKey]);
+  }, [todayKey, horizonKey]);
 
-  const lastVisibleKey = dateKeys[dateKeys.length - 1] ?? windowStart;
-  const canPageBack = windowStart > todayKey;
-  const canPageForward = lastVisibleKey < horizonKey;
+  const TILE_STEP = 78; // tile min-width (~68px) + gap (10px)
+  const stripRef = useRef<HTMLDivElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const [canScroll, setCanScroll] = useState({ left: false, right: true });
+  const [visibleRange, setVisibleRange] = useState<[string, string]>([
+    dateKeys[0],
+    dateKeys[Math.min(DAYS_VISIBLE - 1, dateKeys.length - 1)],
+  ]);
+
+  const syncStrip = useCallback(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    const { scrollLeft, clientWidth, scrollWidth } = el;
+    setCanScroll({
+      left: scrollLeft > 4,
+      right: scrollLeft + clientWidth < scrollWidth - 4,
+    });
+    const firstIdx = Math.max(0, Math.floor(scrollLeft / TILE_STEP));
+    const lastIdx = Math.min(
+      dateKeys.length - 1,
+      Math.floor((scrollLeft + clientWidth - 1) / TILE_STEP),
+    );
+    const first = dateKeys[firstIdx];
+    const last = dateKeys[lastIdx];
+    if (first && last) {
+      setVisibleRange([first, last]);
+      const [fy, fm] = first.split("-").map(Number);
+      ensureMonth(fy, fm);
+      const [ly, lm] = last.split("-").map(Number);
+      if (ly !== fy || lm !== fm) ensureMonth(ly, lm);
+    }
+  }, [dateKeys, ensureMonth]);
+
+  const onStripScroll = useCallback(() => {
+    if (rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      syncStrip();
+    });
+  }, [syncStrip]);
+
+  useEffect(() => {
+    syncStrip();
+  }, [syncStrip]);
+
+  const nudge = (dir: 1 | -1) => {
+    const el = stripRef.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+  };
+
+  const scrollToKey = (key: string) => {
+    const el = stripRef.current;
+    const idx = dateKeys.indexOf(key);
+    if (el && idx >= 0)
+      el.scrollTo({ left: Math.max(0, idx * TILE_STEP - 8), behavior: "smooth" });
+  };
 
   // Month(s) currently in view — shown above the strip so paging is legible.
   const rangeLabel = useMemo(() => {
-    if (dateKeys.length === 0) return "";
-    const first = dateKeys[0];
-    const last = dateKeys[dateKeys.length - 1];
+    const [first, last] = visibleRange;
+    if (!first || !last) return "";
     const [fy, fm] = first.split("-").map(Number);
     const [ly, lm] = last.split("-").map(Number);
     if (fy === ly && fm === lm) return longMonthYear(first, locale);
@@ -383,24 +434,7 @@ export function BookingView({
       timeZone: "UTC",
     }).format(new Date(Date.UTC(fy, fm - 1, 15, 12)));
     return `${firstMonth} – ${longMonthYear(last, locale)}`;
-  }, [dateKeys, locale]);
-  const pageBack = () =>
-    setWindowStart((s) => {
-      const back = addDaysKey(s, -DAYS_VISIBLE);
-      return back < todayKey ? todayKey : back;
-    });
-  const pageForward = () => setWindowStart((s) => addDaysKey(s, DAYS_VISIBLE));
-
-  // Load availability for whichever month(s) the visible window covers.
-  useEffect(() => {
-    if (dateKeys.length === 0) return;
-    const first = dateKeys[0];
-    const last = dateKeys[dateKeys.length - 1];
-    const [fy, fm] = first.split("-").map(Number);
-    ensureMonth(fy, fm);
-    const [ly, lm] = last.split("-").map(Number);
-    if (ly !== fy || lm !== fm) ensureMonth(ly, lm);
-  }, [dateKeys, ensureMonth]);
+  }, [visibleRange, locale]);
 
   const daysWithSlots = useMemo(
     () => new Set(slots.map((s) => s.dateKey)),
@@ -447,20 +481,22 @@ export function BookingView({
           )}
         </div>
 
-        {/* Paged date scroller: arrows step across the full booking window */}
+        {/* Scrollable date strip: arrows nudge it across the full window */}
         <div className="mt-3 flex items-center gap-2">
           <button
             type="button"
-            onClick={pageBack}
-            disabled={!canPageBack}
+            onClick={() => nudge(-1)}
+            disabled={!canScroll.left}
             aria-label="Earlier dates"
-            className="flex h-[4.25rem] w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30"
+            className="flex h-[4.5rem] w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30"
           >
             <Icon name="chevron-right" className="h-4 w-4 rotate-180" />
           </button>
 
           <div
-            className="no-scrollbar flex flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-1"
+            ref={stripRef}
+            onScroll={onStripScroll}
+            className="no-scrollbar flex flex-1 gap-2.5 overflow-x-auto scroll-smooth pb-1"
             role="tablist"
             aria-label="Choose a date"
           >
@@ -475,7 +511,7 @@ export function BookingView({
                 aria-selected={selected}
                 onClick={() => setSelectedKey(key)}
                 className={cn(
-                  "relative flex min-w-[4.25rem] shrink-0 snap-start flex-col items-center gap-0.5 rounded-xl border px-3 py-2.5 transition-colors",
+                  "relative flex min-w-[4.25rem] shrink-0 flex-col items-center gap-0.5 rounded-xl border px-3 py-2.5 transition-colors",
                   selected
                     ? "border-accent bg-accent text-accent-foreground"
                     : "border-border bg-surface text-foreground hover:bg-subtle",
@@ -512,34 +548,35 @@ export function BookingView({
             );
           })}
 
-          {/* Calendar / month picker for dates beyond the scroller */}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => nudge(1)}
+            disabled={!canScroll.right}
+            aria-label="Later dates"
+            className="flex h-[4.5rem] w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30"
+          >
+            <Icon name="chevron-right" className="h-4 w-4" />
+          </button>
+
+          {/* Month calendar — jump to any date */}
           <button
             type="button"
             onClick={() => setShowCalendar((v) => !v)}
             aria-label="Open calendar"
             aria-expanded={showCalendar}
             className={cn(
-              "flex min-w-[4.25rem] shrink-0 snap-start flex-col items-center justify-center gap-1.5 rounded-xl border px-3 py-3 transition-colors",
+              "flex h-[4.5rem] w-11 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border transition-colors",
               showCalendar
                 ? "border-accent bg-accent text-accent-foreground"
                 : "border-dashed border-border text-muted hover:bg-subtle",
             )}
           >
             <Icon name="calendar" className="h-5 w-5" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider">
-              {showCalendar ? "Close" : "More"}
+            <span className="text-[9px] font-semibold uppercase tracking-wider">
+              {showCalendar ? "Close" : "Cal"}
             </span>
-          </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={pageForward}
-            disabled={!canPageForward}
-            aria-label="Later dates"
-            className="flex h-[4.25rem] w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30"
-          >
-            <Icon name="chevron-right" className="h-4 w-4" />
           </button>
         </div>
 
@@ -553,8 +590,10 @@ export function BookingView({
             locale={locale}
             onMonthView={ensureMonth}
             onPick={(key) => {
+              const [ky, km] = key.split("-").map(Number);
+              ensureMonth(ky, km);
               setSelectedKey(key);
-              setWindowStart(key < todayKey ? todayKey : key);
+              scrollToKey(key);
               setShowCalendar(false);
             }}
           />
