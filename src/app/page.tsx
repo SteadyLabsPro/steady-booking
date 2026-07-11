@@ -88,7 +88,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
                 Book a session
                 <Icon name="arrow-right" className="h-4 w-4 rotate-90" />
               </a>
-              <span className="pl-0.5 text-xs text-muted">
+              <span className="pl-5 text-xs text-muted">
                 {price} pp / {slotMinutes} min
               </span>
             </div>
@@ -102,7 +102,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
                 >
                   {pass.sessions}-session pass
                 </BuyPass>
-                <span className="pl-0.5 text-xs text-muted">
+                <span className="pl-5 text-xs text-muted">
                   {formatPrice(pass.priceMinor, tenant.currency)}
                   {pass.validityMonths > 0
                     ? ` · valid ${pass.validityMonths} months`
@@ -222,7 +222,7 @@ export default async function BookingPage() {
           className={cn(BOUNDS, "flex items-center justify-between gap-3 py-4")}
         >
           <Logo />
-          <span className="text-right text-[10px] font-medium uppercase leading-tight tracking-[0.14em] text-muted sm:text-xs sm:tracking-[0.2em]">
+          <span className="hidden text-right text-xs font-medium uppercase leading-tight tracking-[0.2em] text-muted sm:block">
             {tenant.descriptor}
           </span>
         </div>

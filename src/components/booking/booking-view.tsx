@@ -74,6 +74,121 @@ function weekdayShort(key: string, locale: string): string {
   }).format(new Date(Date.UTC(y, m - 1, d, 12)));
 }
 
+function longDateLabel(key: string, locale: string): string {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(y, m - 1, d, 12)));
+}
+
+const pad2 = (x: number) => String(x).padStart(2, "0");
+
+/** A month-grid date picker. Past days are disabled; days with sessions show a
+ * dot. Picking a day selects it (even if it's beyond the visible day scroller). */
+function MonthCalendar({
+  todayKey,
+  daysWithSlots,
+  selectedKey,
+  onPick,
+  locale,
+}: {
+  todayKey: string;
+  daysWithSlots: Set<string>;
+  selectedKey: string;
+  onPick: (key: string) => void;
+  locale: string;
+}) {
+  const [ty, tm] = todayKey.split("-").map(Number);
+  const [view, setView] = useState({ y: ty, m: tm }); // m is 1-12
+
+  const monthLabel = new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(view.y, view.m - 1, 1, 12)));
+
+  // Monday-first offset for the 1st of the month.
+  const firstDow =
+    (new Date(Date.UTC(view.y, view.m - 1, 1, 12)).getUTCDay() + 6) % 7;
+  const daysInMonth = new Date(Date.UTC(view.y, view.m, 0, 12)).getUTCDate();
+  const cells: Array<number | null> = [
+    ...Array(firstDow).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  const canPrev = view.y > ty || (view.y === ty && view.m > tm);
+  const prev = () =>
+    setView((v) => (v.m === 1 ? { y: v.y - 1, m: 12 } : { y: v.y, m: v.m - 1 }));
+  const next = () =>
+    setView((v) => (v.m === 12 ? { y: v.y + 1, m: 1 } : { y: v.y, m: v.m + 1 }));
+
+  return (
+    <div className="mt-3 w-full max-w-[19rem] rounded-xl border border-border bg-surface p-4">
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={prev}
+          disabled={!canPrev}
+          aria-label="Previous month"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30"
+        >
+          <Icon name="chevron-right" className="h-4 w-4 rotate-180" />
+        </button>
+        <span className="text-sm font-semibold">{monthLabel}</span>
+        <button
+          type="button"
+          onClick={next}
+          aria-label="Next month"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-subtle"
+        >
+          <Icon name="chevron-right" className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="mt-3 grid grid-cols-7 gap-1 text-center">
+        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((w) => (
+          <span
+            key={w}
+            className="text-[10px] font-semibold uppercase tracking-wide text-muted"
+          >
+            {w}
+          </span>
+        ))}
+        {cells.map((d, i) => {
+          if (d === null) return <span key={`blank-${i}`} />;
+          const key = `${view.y}-${pad2(view.m)}-${pad2(d)}`;
+          const past = key < todayKey;
+          const selected = key === selectedKey;
+          const hasSlots = daysWithSlots.has(key);
+          return (
+            <button
+              key={key}
+              type="button"
+              disabled={past}
+              onClick={() => onPick(key)}
+              aria-pressed={selected}
+              className={cn(
+                "relative flex h-9 items-center justify-center rounded-md text-sm tabular-nums transition-colors",
+                past && "cursor-not-allowed text-muted/40",
+                !past && !selected && "hover:bg-subtle",
+                selected && "bg-accent font-semibold text-accent-foreground",
+              )}
+            >
+              {d}
+              {hasSlots && !selected && (
+                <span className="absolute bottom-1 h-1 w-1 rounded-full bg-highlight" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function RemainingBadge({ remaining }: { remaining: number }) {
   if (remaining === 0) {
     return <span className="text-sm text-muted">Fully booked</span>;
@@ -173,7 +288,7 @@ export function BookingView({
   const [selectedKey, setSelectedKey] = useState(
     () => dateKeys.find((k) => daysWithSlots.has(k)) ?? todayKey,
   );
-  const [showMoreHint, setShowMoreHint] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const label = (key: string) =>
     key === todayKey
@@ -248,66 +363,95 @@ export function BookingView({
             );
           })}
 
-          {/* Placeholder entry point for a future calendar / month picker */}
+          {/* Calendar / month picker for dates beyond the scroller */}
           <button
             type="button"
-            onClick={() => setShowMoreHint((v) => !v)}
-            aria-label="More dates"
-            className="flex min-w-[4.25rem] shrink-0 snap-start flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-3 text-muted transition-colors hover:bg-subtle"
+            onClick={() => setShowCalendar((v) => !v)}
+            aria-label="Open calendar"
+            aria-expanded={showCalendar}
+            className={cn(
+              "flex min-w-[4.25rem] shrink-0 snap-start flex-col items-center justify-center gap-1.5 rounded-xl border px-3 py-3 transition-colors",
+              showCalendar
+                ? "border-accent bg-accent text-accent-foreground"
+                : "border-dashed border-border text-muted hover:bg-subtle",
+            )}
           >
             <Icon name="calendar" className="h-5 w-5" />
             <span className="text-[10px] font-semibold uppercase tracking-wider">
-              More
+              {showCalendar ? "Close" : "More"}
             </span>
           </button>
         </div>
 
-        {showMoreHint && (
-          <p className="mt-2 text-xs text-muted">
-            A full calendar picker will open here.
-          </p>
+        {showCalendar && (
+          <MonthCalendar
+            todayKey={todayKey}
+            daysWithSlots={daysWithSlots}
+            selectedKey={selectedKey}
+            locale={locale}
+            onPick={(key) => {
+              setSelectedKey(key);
+              setShowCalendar(false);
+            }}
+          />
         )}
 
-        {/* Slots for the selected day */}
-        <div className="mt-8 flex flex-col gap-10">
-          {servicesForDay.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted">
-              No sessions on this day. Try another date.
-            </div>
-          ) : (
-            servicesForDay.map(({ service, slots: groupSlots }) => (
-              <div key={service.id} className="flex flex-col gap-4">
-                <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-subtle text-foreground">
-                    <Icon name={service.icon} className="h-5 w-5" />
-                  </span>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2.5">
-                      <h2 className="text-lg font-semibold tracking-tight">
-                        {service.name}
-                      </h2>
-                      <span className="rounded-full bg-subtle px-2.5 py-0.5 text-xs font-medium text-muted">
-                        {service.durationMinutes} min
-                      </span>
+        {/* Selected day — heading + slots. Keyed on the date so it visibly
+            re-renders (quick fade) whenever the chosen day changes. */}
+        <div key={selectedKey} className="animate-slot-in">
+          <div className="mt-8 flex items-baseline gap-2.5">
+            <h2 className="font-serif text-2xl tracking-tight">
+              {longDateLabel(selectedKey, locale)}
+            </h2>
+            <span className="text-sm text-muted">
+              {daySlots.length > 0
+                ? `${daySlots.length} session${daySlots.length === 1 ? "" : "s"}`
+                : "No sessions"}
+            </span>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-10">
+            {servicesForDay.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted">
+                No sessions on this day. Try another date.
+              </div>
+            ) : (
+              servicesForDay.map(({ service, slots: groupSlots }) => (
+                <div key={service.id} className="flex flex-col gap-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-foreground">
+                      <Icon name={service.icon} className="h-5 w-5" />
+                    </span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2.5">
+                        <h3 className="text-lg font-semibold tracking-tight">
+                          {service.name}
+                        </h3>
+                        <span className="rounded-full bg-surface px-2.5 py-0.5 text-xs font-medium text-muted">
+                          {service.durationMinutes} min
+                        </span>
+                      </div>
+                      {service.description && (
+                        <p className="text-sm text-muted">
+                          {service.description}
+                        </p>
+                      )}
                     </div>
-                    {service.description && (
-                      <p className="text-sm text-muted">{service.description}</p>
-                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {groupSlots.map((slot) => (
+                      <SlotCard
+                        key={slot.id}
+                        slot={slot}
+                        onSelect={setSelectedSlot}
+                      />
+                    ))}
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {groupSlots.map((slot) => (
-                    <SlotCard
-                      key={slot.id}
-                      slot={slot}
-                      onSelect={setSelectedSlot}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
+          </div>
         </div>
       </div>
 
