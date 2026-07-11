@@ -68,36 +68,41 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
             <h1 className="font-serif text-5xl leading-[1.03] tracking-tight sm:text-6xl">
               {hero.headline}
             </h1>
-            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted sm:text-sm">
-              {hero.subCaption}
-            </span>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted sm:text-sm">
+                {hero.subCaption}
+              </span>
+              <span className="text-sm text-muted">
+                Open {openTime}–{lastSlotTime}, {daysOfWeek.length} days a week.
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             {/* Primary — book a single session */}
-            <div className="flex flex-col items-center gap-1.5">
+            <div className="flex flex-col items-start gap-1.5">
               <a
                 href="#book"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-accent px-7 py-3.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-accent px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
               >
                 Book a session
                 <Icon name="chevron-right" className="h-4 w-4 rotate-90" />
               </a>
-              <span className="text-xs text-muted">
+              <span className="pl-0.5 text-xs text-muted">
                 {price} pp / {slotMinutes} min
               </span>
             </div>
 
             {/* Secondary — buy a pass */}
             {pass && (
-              <div className="flex flex-col items-center gap-1.5">
+              <div className="flex flex-col items-start gap-1.5">
                 <BuyPass
                   canBuyOnline={canBuyOnline}
-                  className="inline-flex w-full items-center justify-center rounded-md bg-[#c2a06a] px-7 py-3.5 text-sm font-medium uppercase tracking-wide text-accent transition-colors hover:bg-[#b5934f]"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-[#c2a06a] px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-[#b5934f]"
                 >
                   {pass.sessions}-session pass
                 </BuyPass>
-                <span className="text-xs text-muted">
+                <span className="pl-0.5 text-xs text-muted">
                   only {formatPrice(pass.priceMinor, tenant.currency)}
                   {pass.validityMonths > 0
                     ? ` · valid ${pass.validityMonths} months`
@@ -106,10 +111,6 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
               </div>
             )}
           </div>
-
-          <p className="text-sm text-muted">
-            Open {openTime}–{lastSlotTime}, {daysOfWeek.length} days a week.
-          </p>
         </div>
 
         {/* Full-bleed image — on top when stacked (mobile), right on desktop */}
