@@ -333,10 +333,40 @@ export function BookingView({
 
   const tomorrowKey = useMemo(() => addDaysKey(todayKey, 1), [todayKey]);
 
-  const dateKeys = useMemo(
-    () => Array.from({ length: DAYS_VISIBLE }, (_, i) => addDaysKey(todayKey, i)),
-    [todayKey],
-  );
+  // The scroller shows a paged window of DAYS_VISIBLE days; arrows move it
+  // across the whole bookable horizon, loading each month lazily as it enters.
+  const [windowStart, setWindowStart] = useState(todayKey);
+
+  const dateKeys = useMemo(() => {
+    const out: string[] = [];
+    for (let i = 0; i < DAYS_VISIBLE; i++) {
+      const k = addDaysKey(windowStart, i);
+      if (k > horizonKey) break;
+      out.push(k);
+    }
+    return out;
+  }, [windowStart, horizonKey]);
+
+  const lastVisibleKey = dateKeys[dateKeys.length - 1] ?? windowStart;
+  const canPageBack = windowStart > todayKey;
+  const canPageForward = lastVisibleKey < horizonKey;
+  const pageBack = () =>
+    setWindowStart((s) => {
+      const back = addDaysKey(s, -DAYS_VISIBLE);
+      return back < todayKey ? todayKey : back;
+    });
+  const pageForward = () => setWindowStart((s) => addDaysKey(s, DAYS_VISIBLE));
+
+  // Load availability for whichever month(s) the visible window covers.
+  useEffect(() => {
+    if (dateKeys.length === 0) return;
+    const first = dateKeys[0];
+    const last = dateKeys[dateKeys.length - 1];
+    const [fy, fm] = first.split("-").map(Number);
+    ensureMonth(fy, fm);
+    const [ly, lm] = last.split("-").map(Number);
+    if (ly !== fy || lm !== fm) ensureMonth(ly, lm);
+  }, [dateKeys, ensureMonth]);
 
   const daysWithSlots = useMemo(
     () => new Set(slots.map((s) => s.dateKey)),
@@ -344,7 +374,10 @@ export function BookingView({
   );
 
   const [selectedKey, setSelectedKey] = useState(
-    () => dateKeys.find((k) => daysWithSlots.has(k)) ?? todayKey,
+    () =>
+      Array.from({ length: DAYS_VISIBLE }, (_, i) => addDaysKey(todayKey, i)).find(
+        (k) => daysWithSlots.has(k),
+      ) ?? todayKey,
   );
   const [showCalendar, setShowCalendar] = useState(false);
 
@@ -373,13 +406,24 @@ export function BookingView({
           Choose a date
         </p>
 
-        {/* Horizontal date scroller */}
-        <div
-          className="no-scrollbar mt-3 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-1"
-          role="tablist"
-          aria-label="Choose a date"
-        >
-          {dateKeys.map((key) => {
+        {/* Paged date scroller: arrows step across the full booking window */}
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={pageBack}
+            disabled={!canPageBack}
+            aria-label="Earlier dates"
+            className="flex h-[4.25rem] w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30"
+          >
+            <Icon name="chevron-right" className="h-4 w-4 rotate-180" />
+          </button>
+
+          <div
+            className="no-scrollbar flex flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-1"
+            role="tablist"
+            aria-label="Choose a date"
+          >
+            {dateKeys.map((key) => {
             const selected = key === selectedKey;
             const hasSlots = daysWithSlots.has(key);
             return (
@@ -439,6 +483,17 @@ export function BookingView({
               {showCalendar ? "Close" : "More"}
             </span>
           </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={pageForward}
+            disabled={!canPageForward}
+            aria-label="Later dates"
+            className="flex h-[4.25rem] w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30"
+          >
+            <Icon name="chevron-right" className="h-4 w-4" />
+          </button>
         </div>
 
         {showCalendar && (
@@ -452,6 +507,7 @@ export function BookingView({
             onMonthView={ensureMonth}
             onPick={(key) => {
               setSelectedKey(key);
+              setWindowStart(key < todayKey ? todayKey : key);
               setShowCalendar(false);
             }}
           />
