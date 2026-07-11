@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { TenantWaiver } from "@/engine";
 import { cn } from "@/lib/utils";
 import { Icon, type IconName } from "@/components/icons";
@@ -509,8 +516,8 @@ export function BookingView({
           <div
             ref={stripRef}
             onScroll={onStripScroll}
-            style={{ maskImage, WebkitMaskImage: maskImage }}
-            className="no-scrollbar flex flex-1 snap-x snap-proximity gap-2.5 overflow-x-auto scroll-smooth px-0.5 pb-1"
+            style={{ "--strip-mask": maskImage } as CSSProperties}
+            className="no-scrollbar flex flex-1 snap-x snap-proximity gap-2.5 overflow-x-auto scroll-smooth px-0.5 pb-1 sm:[-webkit-mask-image:var(--strip-mask)] sm:[mask-image:var(--strip-mask)]"
             role="tablist"
             aria-label="Choose a date"
           >
@@ -581,7 +588,7 @@ export function BookingView({
             aria-label="Open calendar"
             aria-expanded={showCalendar}
             className={cn(
-              "flex h-[4.5rem] w-11 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border transition-colors",
+              "hidden h-[4.5rem] w-11 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border transition-colors sm:flex",
               showCalendar
                 ? "border-accent bg-accent text-accent-foreground"
                 : "border-dashed border-border text-muted hover:bg-subtle",
@@ -593,6 +600,24 @@ export function BookingView({
             </span>
           </button>
         </div>
+
+        {/* Mobile calendar toggle — sits under the date strip */}
+        <button
+          type="button"
+          onClick={() => setShowCalendar((v) => !v)}
+          aria-expanded={showCalendar}
+          className={cn(
+            "mt-2 flex items-center gap-2 self-start rounded-lg border px-3 py-2 text-sm transition-colors sm:hidden",
+            showCalendar
+              ? "border-accent bg-accent text-accent-foreground"
+              : "border-dashed border-border text-muted hover:bg-subtle",
+          )}
+        >
+          <Icon name="calendar" className="h-4 w-4" />
+          <span className="font-medium">
+            {showCalendar ? "Close calendar" : "Calendar"}
+          </span>
+        </button>
 
         {showCalendar && (
           <MonthCalendar
