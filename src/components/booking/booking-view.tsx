@@ -86,6 +86,23 @@ function longDateLabel(key: string, locale: string): string {
   }).format(new Date(Date.UTC(y, m - 1, d, 12)));
 }
 
+function monthShort(key: string, locale: string): string {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Intl.DateTimeFormat(locale, {
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(y, m - 1, d, 12)));
+}
+
+function longMonthYear(key: string, locale: string): string {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(y, m - 1, d, 12)));
+}
+
 const pad2 = (x: number) => String(x).padStart(2, "0");
 
 /** A month-grid date picker. Past days are disabled; days with sessions show a
@@ -350,6 +367,23 @@ export function BookingView({
   const lastVisibleKey = dateKeys[dateKeys.length - 1] ?? windowStart;
   const canPageBack = windowStart > todayKey;
   const canPageForward = lastVisibleKey < horizonKey;
+
+  // Month(s) currently in view — shown above the strip so paging is legible.
+  const rangeLabel = useMemo(() => {
+    if (dateKeys.length === 0) return "";
+    const first = dateKeys[0];
+    const last = dateKeys[dateKeys.length - 1];
+    const [fy, fm] = first.split("-").map(Number);
+    const [ly, lm] = last.split("-").map(Number);
+    if (fy === ly && fm === lm) return longMonthYear(first, locale);
+    if (fy !== ly)
+      return `${longMonthYear(first, locale)} – ${longMonthYear(last, locale)}`;
+    const firstMonth = new Intl.DateTimeFormat(locale, {
+      month: "long",
+      timeZone: "UTC",
+    }).format(new Date(Date.UTC(fy, fm - 1, 15, 12)));
+    return `${firstMonth} – ${longMonthYear(last, locale)}`;
+  }, [dateKeys, locale]);
   const pageBack = () =>
     setWindowStart((s) => {
       const back = addDaysKey(s, -DAYS_VISIBLE);
@@ -402,9 +436,16 @@ export function BookingView({
   return (
     <section id="book" className="scroll-mt-4 bg-subtle pb-6 pt-2">
       <div className={cn(BOUNDS, "pt-8")}>
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted">
-          Choose a date
-        </p>
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted">
+            Choose a date
+          </p>
+          {rangeLabel && (
+            <span className="text-sm font-semibold tracking-tight">
+              {rangeLabel}
+            </span>
+          )}
+        </div>
 
         {/* Paged date scroller: arrows step across the full booking window */}
         <div className="mt-3 flex items-center gap-2">
@@ -434,7 +475,7 @@ export function BookingView({
                 aria-selected={selected}
                 onClick={() => setSelectedKey(key)}
                 className={cn(
-                  "flex min-w-[4.25rem] shrink-0 snap-start flex-col items-center gap-1 rounded-xl border px-3 py-3 transition-colors",
+                  "relative flex min-w-[4.25rem] shrink-0 snap-start flex-col items-center gap-0.5 rounded-xl border px-3 py-2.5 transition-colors",
                   selected
                     ? "border-accent bg-accent text-accent-foreground"
                     : "border-border bg-surface text-foreground hover:bg-subtle",
@@ -448,19 +489,25 @@ export function BookingView({
                 >
                   {label(key)}
                 </span>
-                <span className="text-lg font-semibold tabular-nums">
+                <span className="text-lg font-semibold leading-none tabular-nums">
                   {dayNumber(key)}
                 </span>
                 <span
                   className={cn(
-                    "h-1 w-1 rounded-full",
-                    hasSlots
-                      ? selected
-                        ? "bg-accent-foreground"
-                        : "bg-highlight"
-                      : "bg-transparent",
+                    "text-[10px] font-semibold uppercase tracking-wider",
+                    selected ? "text-accent-foreground/75" : "text-muted",
                   )}
-                />
+                >
+                  {monthShort(key, locale)}
+                </span>
+                {hasSlots && (
+                  <span
+                    className={cn(
+                      "absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full",
+                      selected ? "bg-accent-foreground" : "bg-highlight",
+                    )}
+                  />
+                )}
               </button>
             );
           })}
