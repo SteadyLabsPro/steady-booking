@@ -40,14 +40,14 @@ function Logo() {
       <img
         src="/tide-house-logo-horizontal.png"
         alt={tenant.name}
-        className="block h-9 w-auto shrink-0 md:hidden"
+        className="block h-12 w-auto shrink-0 md:hidden"
       />
       {/* Desktop: stacked lockup */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/tide-house-logo-only.png"
         alt={tenant.name}
-        className="hidden h-16 w-auto shrink-0 md:block"
+        className="hidden h-20 w-auto shrink-0 md:block"
       />
     </>
   );
@@ -86,7 +86,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
                 className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-accent px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
               >
                 Book a session
-                <Icon name="chevron-right" className="h-4 w-4 rotate-90" />
+                <Icon name="arrow-right" className="h-4 w-4 rotate-90" />
               </a>
               <span className="pl-0.5 text-xs text-muted">
                 {price} pp / {slotMinutes} min
@@ -103,7 +103,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
                   {pass.sessions}-session pass
                 </BuyPass>
                 <span className="pl-0.5 text-xs text-muted">
-                  only {formatPrice(pass.priceMinor, tenant.currency)}
+                  {formatPrice(pass.priceMinor, tenant.currency)}
                   {pass.validityMonths > 0
                     ? ` · valid ${pass.validityMonths} months`
                     : ""}

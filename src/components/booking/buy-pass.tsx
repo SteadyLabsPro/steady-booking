@@ -175,11 +175,6 @@ export function BuyPass({ canBuyOnline, className, children }: BuyPassProps) {
             ) : (
               <div className="flex flex-col gap-2 rounded-lg border border-dashed border-border p-4 text-sm text-muted">
                 <p>Online purchase is coming soon.</p>
-                <p>
-                  Ask a member of staff to set you up with a pass in the
-                  meantime — {bundle.sessions} visits for {price}
-                  {validity && `, valid ${validity}`}.
-                </p>
               </div>
             )}
           </div>
