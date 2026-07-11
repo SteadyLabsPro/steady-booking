@@ -410,8 +410,21 @@ export function BookingView({
 
   const nudge = (dir: 1 | -1) => {
     const el = stripRef.current;
-    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+    if (!el) return;
+    // Scroll by a whole number of tiles so we always land on a tile boundary.
+    const step =
+      Math.max(1, Math.floor(el.clientWidth / TILE_STEP) - 1) * TILE_STEP;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
   };
+
+  // Fade whichever edge still has more tiles, so partial tiles taper off
+  // instead of showing as a hard-cut half tile.
+  const fade = "2.25rem";
+  const maskImage = `linear-gradient(to right, ${
+    canScroll.left ? "transparent" : "#000"
+  } 0, #000 ${fade}, #000 calc(100% - ${fade}), ${
+    canScroll.right ? "transparent" : "#000"
+  } 100%)`;
 
   const scrollToKey = (key: string) => {
     const el = stripRef.current;
@@ -496,7 +509,8 @@ export function BookingView({
           <div
             ref={stripRef}
             onScroll={onStripScroll}
-            className="no-scrollbar flex flex-1 gap-2.5 overflow-x-auto scroll-smooth pb-1"
+            style={{ maskImage, WebkitMaskImage: maskImage }}
+            className="no-scrollbar flex flex-1 snap-x snap-proximity gap-2.5 overflow-x-auto scroll-smooth px-0.5 pb-1"
             role="tablist"
             aria-label="Choose a date"
           >
@@ -511,7 +525,7 @@ export function BookingView({
                 aria-selected={selected}
                 onClick={() => setSelectedKey(key)}
                 className={cn(
-                  "relative flex min-w-[4.25rem] shrink-0 flex-col items-center gap-0.5 rounded-xl border px-3 py-2.5 transition-colors",
+                  "relative flex min-w-[4.25rem] shrink-0 snap-start flex-col items-center gap-0.5 rounded-xl border px-3 py-2.5 transition-colors",
                   selected
                     ? "border-accent bg-accent text-accent-foreground"
                     : "border-border bg-surface text-foreground hover:bg-subtle",
