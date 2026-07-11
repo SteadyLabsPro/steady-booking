@@ -501,7 +501,7 @@ export function BookingView({
             onClick={() => nudge(-1)}
             disabled={!canScroll.left}
             aria-label="Earlier dates"
-            className="flex h-[4.5rem] w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30"
+            className="hidden h-[4.5rem] w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30 sm:flex"
           >
             <Icon name="chevron-right" className="h-4 w-4 rotate-180" />
           </button>
@@ -569,7 +569,7 @@ export function BookingView({
             onClick={() => nudge(1)}
             disabled={!canScroll.right}
             aria-label="Later dates"
-            className="flex h-[4.5rem] w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30"
+            className="hidden h-[4.5rem] w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30 sm:flex"
           >
             <Icon name="chevron-right" className="h-4 w-4" />
           </button>
