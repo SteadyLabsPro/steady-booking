@@ -52,14 +52,25 @@ export async function getAvailability(
   todayKey: string,
   windowDays: number,
 ): Promise<Availability> {
-  const sb = createServiceClient();
-
   const startISO = new Date().toISOString();
   const endISO = zonedTimeToUtcISO(
     addDaysKey(todayKey, windowDays),
     "00:00",
     tenant.timezone,
   );
+  return getAvailabilityBetween(startISO, endISO);
+}
+
+/**
+ * Active services + bookable sessions in an explicit [startISO, endISO) range,
+ * with remaining spaces. Used for both the initial near-term window and the
+ * calendar's lazy per-month fetches.
+ */
+export async function getAvailabilityBetween(
+  startISO: string,
+  endISO: string,
+): Promise<Availability> {
+  const sb = createServiceClient();
 
   const { data: svc, error: svcErr } = await sb
     .from("services")

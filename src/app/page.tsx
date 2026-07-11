@@ -1,17 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { tenant } from "@/config/tenant.config";
-import {
-  formatPrice,
-  formatSessionDate,
-  formatSessionTime,
-  sessionDateKey,
-} from "@/engine";
+import { formatPrice, sessionDateKey } from "@/engine";
 import { getAvailability } from "@/lib/supabase/availability";
+import { toSlotViews } from "@/lib/booking/slots";
 import { cn } from "@/lib/utils";
 import {
   BookingView,
-  type SlotView,
   type ServiceView,
 } from "@/components/booking/booking-view";
 import { BuyPass } from "@/components/booking/buy-pass";
@@ -28,9 +23,6 @@ export const dynamic = "force-dynamic";
 
 const BOUNDS = "mx-auto w-full max-w-6xl px-5 sm:px-8";
 const AVAILABILITY_WINDOW_DAYS = 14;
-
-// Presentation-only: slot times flagged as popular.
-const POPULAR_SLOT_TIMES = new Set<string>(["18:00"]);
 
 function Logo() {
   return (
@@ -183,14 +175,13 @@ function SiteFooter() {
 export default async function BookingPage() {
   const todayKey = sessionDateKey(new Date().toISOString(), tenant.timezone);
 
-  // Real availability from Supabase (server-side, service role).
-  const { services: dbServices, sessions, remainingBySession } =
-    await getAvailability(todayKey, AVAILABILITY_WINDOW_DAYS);
+  // Near-term availability from Supabase (server-side, service role). The
+  // calendar lazily loads further months on the client from here.
+  const availability = await getAvailability(todayKey, AVAILABILITY_WINDOW_DAYS);
 
   const canBuyOnline = isStripeConfigured();
-  const activeServiceIds = new Set(dbServices.map((s) => s.id));
 
-  const services: ServiceView[] = dbServices.map((s) => ({
+  const services: ServiceView[] = availability.services.map((s) => ({
     id: s.id,
     name: s.name,
     durationMinutes: s.durationMinutes,
@@ -198,22 +189,7 @@ export default async function BookingPage() {
     icon: "sauna", // single service in the MVP; per-service icons can come later
   }));
 
-  const slots: SlotView[] = sessions
-    .filter((s) => activeServiceIds.has(s.serviceId))
-    .map((s) => {
-      const time = formatSessionTime(s.startsAt, tenant.timezone);
-      return {
-        id: s.id,
-        serviceId: s.serviceId,
-        dateKey: sessionDateKey(s.startsAt, tenant.timezone),
-        dateLabel: formatSessionDate(s.startsAt, tenant.timezone),
-        time,
-        price: formatPrice(s.priceMinor, tenant.currency),
-        priceMinor: s.priceMinor,
-        remaining: remainingBySession[s.id] ?? s.capacity,
-        popular: POPULAR_SLOT_TIMES.has(time),
-      };
-    });
+  const slots = toSlotViews(availability);
 
   return (
     <div className="flex min-h-dvh flex-col">

@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TenantWaiver } from "@/engine";
 import { cn } from "@/lib/utils";
 import { Icon, type IconName } from "@/components/icons";
 import { BookingSheet } from "@/components/booking/booking-sheet";
+import { fetchMonthSlots } from "@/lib/actions/availability";
+import { MAX_HORIZON_DAYS } from "@/lib/booking/constants";
 
 /**
  * Interactive booking view: a horizontal date scroller with a day-at-a-time
@@ -90,19 +92,30 @@ const pad2 = (x: number) => String(x).padStart(2, "0");
  * dot. Picking a day selects it (even if it's beyond the visible day scroller). */
 function MonthCalendar({
   todayKey,
+  horizonKey,
   daysWithSlots,
   selectedKey,
+  loading,
   onPick,
+  onMonthView,
   locale,
 }: {
   todayKey: string;
+  horizonKey: string;
   daysWithSlots: Set<string>;
   selectedKey: string;
+  loading: boolean;
   onPick: (key: string) => void;
+  onMonthView: (year: number, month: number) => void;
   locale: string;
 }) {
   const [ty, tm] = todayKey.split("-").map(Number);
   const [view, setView] = useState({ y: ty, m: tm }); // m is 1-12
+
+  // Ask the parent to load this month's availability whenever it's shown.
+  useEffect(() => {
+    onMonthView(view.y, view.m);
+  }, [view, onMonthView]);
 
   const monthLabel = new Intl.DateTimeFormat(locale, {
     month: "long",
@@ -120,6 +133,8 @@ function MonthCalendar({
   ];
 
   const canPrev = view.y > ty || (view.y === ty && view.m > tm);
+  const nm = view.m === 12 ? { y: view.y + 1, m: 1 } : { y: view.y, m: view.m + 1 };
+  const canNext = `${nm.y}-${pad2(nm.m)}-01` <= horizonKey;
   const prev = () =>
     setView((v) => (v.m === 1 ? { y: v.y - 1, m: 12 } : { y: v.y, m: v.m - 1 }));
   const next = () =>
@@ -137,18 +152,32 @@ function MonthCalendar({
         >
           <Icon name="chevron-right" className="h-4 w-4 rotate-180" />
         </button>
-        <span className="text-sm font-semibold">{monthLabel}</span>
+        <span className="flex items-center gap-2 text-sm font-semibold">
+          {monthLabel}
+          {loading && (
+            <span className="text-[10px] font-normal uppercase tracking-wide text-muted">
+              Loading…
+            </span>
+          )}
+        </span>
         <button
           type="button"
           onClick={next}
+          disabled={!canNext}
           aria-label="Next month"
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-subtle"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-subtle disabled:pointer-events-none disabled:opacity-30"
         >
           <Icon name="chevron-right" className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="mt-3 grid grid-cols-7 gap-1 text-center">
+      <div
+        aria-busy={loading}
+        className={cn(
+          "mt-3 grid grid-cols-7 gap-1 text-center transition-opacity",
+          loading && "opacity-50",
+        )}
+      >
         {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((w) => (
           <span
             key={w}
@@ -261,17 +290,46 @@ function SlotCard({
 
 export function BookingView({
   services,
-  slots,
+  slots: initialSlots,
   todayKey,
   currency,
   waiver,
   locale = "en-GB",
 }: BookingViewProps) {
+  // Slots start with the near-term window from the server, then grow as the
+  // calendar lazily loads whole months on demand.
+  const [slots, setSlots] = useState(initialSlots);
   const [selectedSlot, setSelectedSlot] = useState<SlotView | null>(null);
   const serviceNameById = useMemo(
     () => new Map(services.map((s) => [s.id, s.name])),
     [services],
   );
+
+  const horizonKey = useMemo(
+    () => addDaysKey(todayKey, MAX_HORIZON_DAYS),
+    [todayKey],
+  );
+  const loadedMonthsRef = useRef<Set<string>>(new Set());
+  const [monthLoading, setMonthLoading] = useState(false);
+
+  const ensureMonth = useCallback(async (y: number, m: number) => {
+    const mk = `${y}-${pad2(m)}`;
+    if (loadedMonthsRef.current.has(mk)) return;
+    loadedMonthsRef.current.add(mk); // mark up front to dedupe in-flight loads
+    setMonthLoading(true);
+    try {
+      const fetched = await fetchMonthSlots(y, m);
+      setSlots((prev) => {
+        const seen = new Set(prev.map((s) => s.id));
+        const add = fetched.filter((s) => !seen.has(s.id));
+        return add.length ? [...prev, ...add] : prev;
+      });
+    } catch {
+      loadedMonthsRef.current.delete(mk); // allow a retry if it failed
+    } finally {
+      setMonthLoading(false);
+    }
+  }, []);
 
   const tomorrowKey = useMemo(() => addDaysKey(todayKey, 1), [todayKey]);
 
@@ -386,9 +444,12 @@ export function BookingView({
         {showCalendar && (
           <MonthCalendar
             todayKey={todayKey}
+            horizonKey={horizonKey}
             daysWithSlots={daysWithSlots}
             selectedKey={selectedKey}
+            loading={monthLoading}
             locale={locale}
+            onMonthView={ensureMonth}
             onPick={(key) => {
               setSelectedKey(key);
               setShowCalendar(false);

@@ -17,7 +17,7 @@ import {
 
 // Stable id for the single seed service, so generation stays idempotent.
 const SERVICE_ID = "b7c9d0e1-2f34-4a56-8b78-9c0d1e2f3a4b";
-const GENERATION_DAYS = 60;
+const GENERATION_DAYS = 90; // ~3 months of bookable sessions
 const CHUNK = 500;
 
 // Initial service content (admin can edit later); its length is a config rule.
