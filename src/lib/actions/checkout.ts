@@ -56,6 +56,8 @@ export async function startCheckout(
       currency: tenant.currency,
       customerEmail: input.email.trim(),
       description: `${tenant.name} — Sauna & Cold Plunge`,
+      statementDescriptor: tenant.payments?.statementDescriptor,
+      metadata: { business: tenant.slug },
       successUrl: `${base}/booking/confirmed?booking=${bookingId}`,
       cancelUrl: `${base}/`,
     });

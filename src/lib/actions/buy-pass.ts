@@ -51,12 +51,14 @@ export async function startPassCheckout(
       description: `${tenant.name} — ${bundle.sessions}-visit pass`,
       metadata: {
         type: "pass",
+        business: tenant.slug,
         bundleId: bundle.id,
         firstName: input.firstName.trim(),
         lastName: input.lastName.trim(),
         email: input.email.trim(),
         phone: input.phone.trim(),
       },
+      statementDescriptor: tenant.payments?.statementDescriptor,
       successUrl: `${base}/pass/confirmed`,
       cancelUrl: `${base}/`,
     });

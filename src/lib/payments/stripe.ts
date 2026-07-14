@@ -40,7 +40,14 @@ export async function createCheckoutSession(
       },
     ],
     customer_email: p.customerEmail,
-    metadata: { bookingId: p.bookingId },
+    metadata: { bookingId: p.bookingId, ...(p.metadata ?? {}) },
+    ...(p.statementDescriptor
+      ? {
+          payment_intent_data: {
+            statement_descriptor_suffix: p.statementDescriptor,
+          },
+        }
+      : {}),
     success_url: p.successUrl,
     cancel_url: p.cancelUrl,
   });
@@ -56,6 +63,7 @@ export async function createPassCheckoutSession(p: {
   customerEmail: string;
   description: string;
   metadata: Record<string, string>;
+  statementDescriptor?: string;
   successUrl: string;
   cancelUrl: string;
 }): Promise<CheckoutResult> {
@@ -73,6 +81,13 @@ export async function createPassCheckoutSession(p: {
     ],
     customer_email: p.customerEmail,
     metadata: p.metadata,
+    ...(p.statementDescriptor
+      ? {
+          payment_intent_data: {
+            statement_descriptor_suffix: p.statementDescriptor,
+          },
+        }
+      : {}),
     success_url: p.successUrl,
     cancel_url: p.cancelUrl,
   });

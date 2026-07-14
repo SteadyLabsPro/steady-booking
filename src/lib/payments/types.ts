@@ -19,6 +19,10 @@ export interface CheckoutParams {
   description: string;
   successUrl: string;
   cancelUrl: string;
+  /** Card statement descriptor suffix (e.g. "TIDEHOUSE"). */
+  statementDescriptor?: string;
+  /** Extra metadata merged onto the session (e.g. { business: "tidehouse" }). */
+  metadata?: Record<string, string>;
 }
 
 export interface CheckoutResult {

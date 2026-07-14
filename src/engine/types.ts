@@ -100,9 +100,22 @@ export interface TenantHero {
 }
 
 /** Configuration for a single business (tenant) using the engine. */
+/** Payment presentation settings (provider-agnostic). */
+export interface PaymentSettings {
+  /**
+   * Card statement descriptor suffix for this business (e.g. "TIDEHOUSE"), so
+   * charges are recognisable even on a Stripe account shared with other
+   * businesses. Stripe limits: <= 22 chars incl. the account prefix; no
+   * < > \ " ' characters.
+   */
+  statementDescriptor?: string;
+}
+
 export interface TenantConfig {
   /** Public-facing business name. */
   name: string;
+  /** Stable slug identifying this business, e.g. "tidehouse" — tags payments. */
+  slug: string;
   /** Small descriptor shown under the wordmark, e.g. "Sauna & Cold Plunge". */
   descriptor: string;
   /** Venue address / location, shown in confirmation emails. */
@@ -123,6 +136,8 @@ export interface TenantConfig {
   pricing: PricingRules;
   /** Booking hold policy. */
   booking: BookingPolicy;
+  /** Payment presentation settings (e.g. card statement descriptor). */
+  payments?: PaymentSettings;
   /** Prepaid bundle / block offers. */
   bundles: Bundle[];
   /** Landing hero content. */

@@ -8,6 +8,7 @@ import type { TenantConfig } from "@/engine";
  */
 export const tenant: TenantConfig = {
   name: "The Tide House",
+  slug: "tidehouse",
   descriptor: "Sauna & Cold Plunge",
   address: "Advantage Padel, Mudeford",
   tagline: "Hot coal sauna & cold plunge.",
@@ -27,6 +28,11 @@ export const tenant: TenantConfig = {
   },
   booking: {
     holdMinutes: 15, // a pending booking holds its spot for 15 min, then frees
+  },
+  payments: {
+    // Shows on the customer's card statement — recognisable even on a Stripe
+    // account shared with other businesses.
+    statementDescriptor: "TIDEHOUSE",
   },
   bundles: [
     {
