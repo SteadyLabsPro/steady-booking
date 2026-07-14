@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { tenant } from "@/config/tenant.config";
 
-const DEFAULT_URL = "https://booking.steadylabs.pro/";
+const DEFAULT_URL = tenant.url;
 
 function imageUrl(
   format: "svg" | "png",

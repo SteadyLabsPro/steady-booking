@@ -13,6 +13,7 @@ export const tenant: TenantConfig = {
   address: "Advantage Padel, Mudeford",
   tagline: "Hot coal sauna & cold plunge.",
   contactEmail: "hello@thetidehouse.co.uk",
+  url: "https://tidehousemudeford.co.uk",
   currency: "GBP",
   timezone: "Europe/London",
   scheduling: {

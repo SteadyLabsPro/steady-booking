@@ -124,6 +124,8 @@ export interface TenantConfig {
   tagline: string;
   /** Primary contact / email reply-to address. */
   contactEmail: string;
+  /** Canonical public site URL (used for QR codes and links). */
+  url: string;
   /** ISO 4217 currency code used for pricing, e.g. "GBP". */
   currency: string;
   /** IANA timezone the business operates in, e.g. "Europe/London". */
