@@ -12,8 +12,8 @@ export const tenant: TenantConfig = {
   descriptor: "Sauna & Cold Plunge",
   address: "Advantage Padel, Mudeford",
   tagline: "Hot coal sauna & cold plunge.",
-  contactEmail: "hello@thetidehouse.co.uk",
-  // Replies to automated emails go here (the venue's monitored Wix inbox).
+  // Public contact + where automated-email replies go (venue's monitored inbox).
+  contactEmail: "mudeford@advantagepadel.co.uk",
   replyToEmail: "mudeford@advantagepadel.co.uk",
   url: "https://tidehousemudeford.co.uk",
   currency: "GBP",
