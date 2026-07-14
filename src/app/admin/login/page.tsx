@@ -18,9 +18,16 @@ export default function AdminLoginPage() {
             The Tide House · Admin
           </h1>
           <p className="text-sm text-muted">
-            Enter the admin password to continue.
+            Sign in with your email and password.
           </p>
         </div>
+        <input
+          type="email"
+          name="email"
+          autoComplete="username"
+          placeholder="Email"
+          className="h-11 rounded-md border border-border bg-surface px-3 text-base outline-none transition-colors focus:border-accent"
+        />
         <input
           type="password"
           name="password"

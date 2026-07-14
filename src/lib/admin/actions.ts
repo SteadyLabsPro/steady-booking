@@ -2,26 +2,30 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { adminToken, ADMIN_COOKIE } from "./auth";
+import { authenticate, sessionCookieValue, ADMIN_COOKIE } from "./auth";
 
 export interface LoginState {
   error?: string;
 }
 
-/** Verify the admin password and set the session cookie. */
+/** Verify the admin credentials (email+password, or blank email for the shared
+ * password) and set the session cookie. */
 export async function login(
   _prev: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
+  const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const pw = process.env.ADMIN_PASSWORD;
-  if (!pw) return { error: "Admin is not configured." };
 
-  const token = adminToken();
-  if (!token || password !== pw) return { error: "Incorrect password." };
+  const identity = authenticate(email, password);
+  if (identity === null) {
+    return { error: "Incorrect email or password." };
+  }
+  const value = sessionCookieValue(identity);
+  if (!value) return { error: "Admin is not configured." };
 
   const jar = await cookies();
-  jar.set(ADMIN_COOKIE, token, {
+  jar.set(ADMIN_COOKIE, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
