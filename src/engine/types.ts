@@ -124,6 +124,12 @@ export interface TenantConfig {
   tagline: string;
   /** Primary contact / email reply-to address. */
   contactEmail: string;
+  /**
+   * Real monitored inbox that customer replies to automated emails should go
+   * to (via Reply-To). Emails send from a noreply address, but replies land
+   * here. Falls back to contactEmail if unset.
+   */
+  replyToEmail?: string;
   /** Canonical public site URL (used for QR codes and links). */
   url: string;
   /** ISO 4217 currency code used for pricing, e.g. "GBP". */

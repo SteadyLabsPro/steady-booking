@@ -34,11 +34,13 @@ export async function sendEmail(params: {
 }): Promise<{ id: string }> {
   // The Resend SDK returns { data, error } rather than throwing on API errors
   // (e.g. an unverified from-domain), so surface those as thrown errors.
+  const replyTo = tenant.replyToEmail ?? tenant.contactEmail;
   const { data, error } = await resend().emails.send({
     from: fromAddress(),
     to: params.to,
     subject: params.subject,
     html: params.html,
+    ...(replyTo ? { replyTo } : {}),
   });
   if (error) {
     throw new Error(`Resend send failed: ${error.message ?? JSON.stringify(error)}`);
