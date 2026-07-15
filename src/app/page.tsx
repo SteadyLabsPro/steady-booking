@@ -217,11 +217,7 @@ export default async function BookingPage() {
           waiver={tenant.waiver}
         />
 
-        <HowItWorks
-          steps={tenant.howItWorks}
-          notice={tenant.accessNotice}
-          className={cn(BOUNDS, "py-12")}
-        />
+        <HowItWorks steps={tenant.howItWorks} className={cn(BOUNDS, "py-12")} />
       </main>
 
       <SiteFooter />

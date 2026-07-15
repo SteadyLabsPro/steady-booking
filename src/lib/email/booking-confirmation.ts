@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { tenant } from "@/config/tenant.config";
 import { formatPrice, formatSessionDate, formatSessionTime } from "@/engine";
 import { isEmailConfigured, sendEmail } from "./resend";
+import { accessNoticeHtml } from "./blocks";
 
 interface ConfirmationData {
   firstName: string;
@@ -41,18 +42,7 @@ export function renderBookingConfirmation(d: ConfirmationData): {
         <p style="color:#9a948b;font-size:12px;margin:20px 0 0;">Booking reference ${d.bookingRef}</p>
 
         <!-- Access code — guests can't get in without this, so make it loud. -->
-        <table style="width:100%;border-collapse:collapse;margin:24px 0 0;">
-          <tr>
-            <td style="background:#173a4e;border-radius:10px 10px 0 0;padding:12px 16px;">
-              <span style="color:#c2a06a;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">${tenant.accessNotice.heading}</span>
-            </td>
-          </tr>
-          <tr>
-            <td style="background:#f5eee6;border:1px solid #c2a06a;border-top:0;border-radius:0 0 10px 10px;padding:16px;">
-              <p style="margin:0;color:#211f1c;font-size:14px;line-height:1.5;">${tenant.accessNotice.body}</p>
-            </td>
-          </tr>
-        </table>
+        ${accessNoticeHtml("booking")}
       </div>
       <div style="padding:16px 24px;background:#f5eee6;text-align:center;color:#6f6a62;font-size:12px;">
         ${tenant.name} &middot; ${tenant.address}

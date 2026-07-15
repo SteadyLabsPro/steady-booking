@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { tenant } from "@/config/tenant.config";
 import { formatPrice } from "@/engine";
 import { isEmailConfigured, sendEmail } from "./resend";
+import { accessNoticeHtml } from "./blocks";
 
 interface PassData {
   firstName: string;
@@ -48,6 +49,9 @@ export function renderPassConfirmation(d: PassData): {
           <tr><td style="padding:12px 0 0;color:#6f6a62;border-top:1px solid #e7e1d6;">Paid</td><td style="padding:12px 0 0;text-align:right;font-weight:700;border-top:1px solid #e7e1d6;">${paid}</td></tr>
         </table>
         <p style="color:#9a948b;font-size:12px;margin:20px 0 0;">1 credit = 1 person-session. Use them for yourself or bring guests.</p>
+
+        <!-- Access code — framed for a pass (no session booked yet). -->
+        ${accessNoticeHtml("pass")}
       </div>
       <div style="padding:16px 24px;background:#f5eee6;text-align:center;color:#6f6a62;font-size:12px;">
         ${tenant.name} &middot; ${tenant.address}

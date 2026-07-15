@@ -1,5 +1,6 @@
 import { Icon } from "@/components/icons";
-import type { TenantStep, TenantNotice } from "@/engine";
+import { AccessNotice } from "@/components/booking/access-notice";
+import type { TenantStep } from "@/engine";
 import { cn } from "@/lib/utils";
 
 /**
@@ -8,11 +9,9 @@ import { cn } from "@/lib/utils";
  */
 export function HowItWorks({
   steps,
-  notice,
   className,
 }: {
   steps: TenantStep[];
-  notice: TenantNotice;
   className?: string;
 }) {
   if (steps.length === 0) return null;
@@ -40,17 +39,7 @@ export function HowItWorks({
           ))}
         </ol>
 
-        <div className="flex items-start gap-3 rounded-xl border border-[#c2a06a]/40 bg-accent/5 p-4">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#c2a06a] text-white">
-            <Icon name="key" className="h-4 w-4" />
-          </span>
-          <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold tracking-tight">
-              {notice.heading}
-            </h3>
-            <p className="text-sm text-muted">{notice.body}</p>
-          </div>
-        </div>
+        <AccessNotice />
       </div>
     </section>
   );

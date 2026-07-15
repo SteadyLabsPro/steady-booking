@@ -27,6 +27,8 @@ export interface TenantStep {
 export interface TenantNotice {
   heading: string;
   body: string;
+  /** Same message framed for a pass purchase (no session booked yet). */
+  passBody?: string;
 }
 
 /** A single highlight shown in the feature strip / mobile tab bar. */

@@ -8,6 +8,7 @@ import { Icon } from "@/components/icons";
 import { startCheckout } from "@/lib/actions/checkout";
 import { checkWaiverNeeded } from "@/lib/actions/check-waiver";
 import { getActivePass, redeemPass } from "@/lib/actions/pass";
+import { AccessNotice } from "@/components/booking/access-notice";
 
 /**
  * Booking sheet — the step-based flow that opens when a slot is selected.
@@ -683,6 +684,8 @@ export function BookingSheet({
                   </span>
                 </p>
               )}
+              <AccessNotice />
+
               <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted">
                 {paidWithPass
                   ? `Paid with your 10-visit pass — ${passRemaining} credit${passRemaining === 1 ? "" : "s"} left. A confirmation email is on its way.`

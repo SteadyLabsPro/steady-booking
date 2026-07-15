@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { tenant } from "@/config/tenant.config";
 import { formatPrice, formatSessionDate, formatSessionTime } from "@/engine";
 import { Icon } from "@/components/icons";
+import { AccessNotice } from "@/components/booking/access-notice";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,8 @@ export default async function BookingConfirmedPage({
           </div>
         </div>
       )}
+
+      <AccessNotice className="w-full" />
 
       <Link
         href="/"

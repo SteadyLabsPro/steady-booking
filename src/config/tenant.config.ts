@@ -75,6 +75,8 @@ export const tenant: TenantConfig = {
   accessNotice: {
     heading: "Access code",
     body: "You will need an access code to enter the facilities. Please head to the downstairs bar at Advantage Padel and ask for your access code to gain entry. The code changes regularly for security purposes.",
+    passBody:
+      "When you book and come in for a session, you'll need an access code to enter the facilities. Please head to the downstairs bar at Advantage Padel and ask for your access code to gain entry. The code changes regularly for security purposes.",
   },
   features: [
     { label: "Hot coal sauna", icon: "sauna" },
