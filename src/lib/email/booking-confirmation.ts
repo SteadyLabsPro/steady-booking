@@ -19,7 +19,8 @@ export function renderBookingConfirmation(d: ConfirmationData): {
   const date = formatSessionDate(d.startsAt, tenant.timezone);
   const time = formatSessionTime(d.startsAt, tenant.timezone);
   const total = formatPrice(d.totalMinor, tenant.currency);
-  const subject = `Your booking at ${tenant.name} is confirmed`;
+  // Leads with the access code — guests can't get in without collecting it.
+  const subject = "Access Code & Booking Confirmation";
 
   const html = `
   <div style="background:#f5eee6;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;color:#211f1c;">
