@@ -108,8 +108,8 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
         {/* Full-bleed image — on top when stacked (mobile), right on desktop */}
         <div className="relative order-1 h-56 w-full sm:h-72 md:order-2 md:h-auto">
           <Image
-            src="/tidehouse-sauna.png"
-            alt="Inside the Tide House sauna"
+            src="/plunge-th.png"
+            alt="The cold plunge tubs at The Tide House"
             fill
             priority
             sizes="(max-width: 768px) 100vw, 57vw"
