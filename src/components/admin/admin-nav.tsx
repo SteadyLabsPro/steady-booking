@@ -14,6 +14,18 @@ export function AdminNav() {
       {/* Desktop */}
       <nav className="hidden items-center gap-5 text-sm md:flex">
         <Link
+          href="/admin"
+          className="text-muted transition-colors hover:text-foreground"
+        >
+          Bookings
+        </Link>
+        <Link
+          href="/admin/transactions"
+          className="text-muted transition-colors hover:text-foreground"
+        >
+          Transactions
+        </Link>
+        <Link
           href="/admin/tools/qr"
           className="text-muted transition-colors hover:text-foreground"
         >
@@ -51,9 +63,23 @@ export function AdminNav() {
             />
             <div className="absolute right-0 top-full z-50 mt-2 flex w-44 flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-lg">
               <Link
-                href="/admin/tools/qr"
+                href="/admin"
                 onClick={() => setOpen(false)}
                 className="px-4 py-3 text-sm transition-colors hover:bg-subtle"
+              >
+                Bookings
+              </Link>
+              <Link
+                href="/admin/transactions"
+                onClick={() => setOpen(false)}
+                className="border-t border-border px-4 py-3 text-sm transition-colors hover:bg-subtle"
+              >
+                Transactions
+              </Link>
+              <Link
+                href="/admin/tools/qr"
+                onClick={() => setOpen(false)}
+                className="border-t border-border px-4 py-3 text-sm transition-colors hover:bg-subtle"
               >
                 QR codes
               </Link>

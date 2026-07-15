@@ -58,10 +58,16 @@ export async function POST(req: Request) {
   const update = paymentUpdateForEvent(event);
   if (update) {
     const sb = createServiceClient();
-    const patch: { payment_status: string; status?: string } = {
+    const patch: {
+      payment_status: string;
+      status?: string;
+      paid_at?: string;
+    } = {
       payment_status: update.paymentStatus,
     };
     if (update.confirmBooking) patch.status = "confirmed";
+    // Stamp when the money actually landed, so accounting reconciles with Stripe.
+    if (update.paymentStatus === "paid") patch.paid_at = new Date().toISOString();
     const { data } = await sb
       .from("bookings")
       .update(patch)
