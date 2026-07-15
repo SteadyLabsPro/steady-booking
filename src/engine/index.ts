@@ -6,6 +6,7 @@ export type {
   TenantConfig,
   TenantFeature,
   TenantHero,
+  TenantHeroImage,
   TenantWaiver,
   WaiverSection,
   WaiverItem,

@@ -90,6 +90,14 @@ export interface TenantWaiver {
 }
 
 /** Marketing content for the landing hero. */
+/** A hero image. Several are cross-faded as a slider. */
+export interface TenantHeroImage {
+  /** Path under /public, e.g. "/plunge-th.png". */
+  src: string;
+  /** Describes the photo for screen readers. */
+  alt: string;
+}
+
 export interface TenantHero {
   /** Large display headline. */
   headline: string;
@@ -97,6 +105,8 @@ export interface TenantHero {
   subCaption: string;
   /** Supporting sentence beneath the headline. */
   subcopy: string;
+  /** Hero photos — one shows a static image, several cross-fade as a slider. */
+  images: TenantHeroImage[];
 }
 
 /** Configuration for a single business (tenant) using the engine. */

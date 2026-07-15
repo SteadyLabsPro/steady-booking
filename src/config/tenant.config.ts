@@ -50,6 +50,15 @@ export const tenant: TenantConfig = {
     headline: "Sauna & Cold Plunge, Mudeford",
     subCaption: "Located inside Advantage Padel.",
     subcopy: "Finnish sauna and ice-cold plunge tubs",
+    // Cross-faded in order. Add another entry to extend the slider.
+    images: [
+      { src: "/plunge-th.png", alt: "The cold plunge tubs at The Tide House" },
+      { src: "/sauna-th.png", alt: "Inside the hot coal sauna at The Tide House" },
+      {
+        src: "/changing-rooms-th.png",
+        alt: "The changing rooms and showers at The Tide House",
+      },
+    ],
   },
   features: [
     { label: "Hot coal sauna", icon: "sauna" },

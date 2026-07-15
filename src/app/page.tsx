@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { tenant } from "@/config/tenant.config";
 import { formatPrice, sessionDateKey } from "@/engine";
@@ -10,6 +9,7 @@ import {
   type ServiceView,
 } from "@/components/booking/booking-view";
 import { BuyPass } from "@/components/booking/buy-pass";
+import { HeroSlider } from "@/components/booking/hero-slider";
 import { Icon } from "@/components/icons";
 import { isStripeConfigured } from "@/lib/payments/stripe";
 
@@ -105,16 +105,9 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
           </div>
         </div>
 
-        {/* Full-bleed image — on top when stacked (mobile), right on desktop */}
-        <div className="relative order-1 h-56 w-full sm:h-72 md:order-2 md:h-auto">
-          <Image
-            src="/plunge-th.png"
-            alt="The cold plunge tubs at The Tide House"
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 57vw"
-            className="object-cover object-center"
-          />
+        {/* Full-bleed photos — on top when stacked (mobile), right on desktop */}
+        <div className="relative order-1 h-56 w-full overflow-hidden sm:h-72 md:order-2 md:h-auto">
+          <HeroSlider images={hero.images} />
         </div>
       </div>
     </section>
