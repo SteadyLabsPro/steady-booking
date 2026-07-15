@@ -1,6 +1,7 @@
 import { isAdmin } from "@/lib/admin/auth";
 import {
   getAdminTransactions,
+  filterTransactions,
   isDateKey,
   todayKey,
 } from "@/lib/admin/transactions";
@@ -29,7 +30,11 @@ export async function GET(req: Request) {
   }
 
   const tz = tenant.timezone;
-  const rows = await getAdminTransactions(from, to);
+  // Same free-text filter as the page, so the CSV matches what's on screen.
+  const rows = filterTransactions(
+    await getAdminTransactions(from, to),
+    searchParams.get("q"),
+  );
 
   const header = [
     "Date",

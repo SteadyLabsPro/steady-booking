@@ -6,6 +6,7 @@ import { Badge, type BadgeTone } from "@/components/admin/badge";
 import { Button } from "@/components/ui/button";
 import {
   getAdminTransactions,
+  filterTransactions,
   revenueMinor,
   isDateKey,
   todayKey,
@@ -34,6 +35,8 @@ function presets(today: string) {
     { label: "This week", from: monday, to: today },
     { label: "This month", from: firstOfMonth, to: today },
     { label: "Last 30 days", from: addDaysKey(today, -29), to: today },
+    // Predates the business — effectively "everything", handy when searching.
+    { label: "All time", from: "2020-01-01", to: today },
   ];
 }
 
@@ -98,21 +101,24 @@ function Row({ t }: { t: AdminTransaction }) {
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; q?: string }>;
 }) {
   const sp = await searchParams;
   const today = todayKey();
   const from = isDateKey(sp.from) ? sp.from : today;
   const toRaw = isDateKey(sp.to) ? sp.to : from;
   const to = toRaw < from ? from : toRaw;
+  const q = (sp.q ?? "").trim();
 
-  const rows = await getAdminTransactions(from, to);
+  const all = await getAdminTransactions(from, to);
+  const rows = filterTransactions(all, q);
   const money = (minor: number) => formatPrice(minor, tenant.currency);
 
   const taken = revenueMinor(rows);
   const bookings = rows.filter((r) => r.kind === "booking");
   const passes = rows.filter((r) => r.kind === "pass");
-  const exportHref = `/admin/transactions/export?from=${from}&to=${to}`;
+  const qs = new URLSearchParams({ from, to, ...(q ? { q } : {}) });
+  const exportHref = `/admin/transactions/export?${qs}`;
   const ranges = presets(today);
 
   return (
@@ -147,6 +153,16 @@ export default async function TransactionsPage({
             className="h-10 rounded-md border border-border bg-surface px-3 text-sm outline-none focus:border-accent"
           />
         </label>
+        <label className="flex min-w-[14rem] flex-1 flex-col gap-1">
+          <span className="text-xs font-medium text-muted">Search</span>
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="Name, email, phone or reference"
+            className="h-10 w-full rounded-md border border-border bg-surface px-3 text-sm outline-none focus:border-accent"
+          />
+        </label>
         <Button type="submit">Show</Button>
         <a href={exportHref} className="ml-auto">
           <Button type="button" variant="outline">
@@ -161,7 +177,7 @@ export default async function TransactionsPage({
           return (
             <Link
               key={r.label}
-              href={`/admin/transactions?from=${r.from}&to=${r.to}`}
+              href={`/admin/transactions?${new URLSearchParams({ from: r.from, to: r.to, ...(q ? { q } : {}) })}`}
               className={cn(
                 "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
                 active
@@ -184,9 +200,28 @@ export default async function TransactionsPage({
 
       <section className="rounded-xl border border-border bg-surface px-4">
         {rows.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted">
-            No transactions in this period.
-          </p>
+          <div className="flex flex-col items-center gap-1 py-10 text-center text-sm text-muted">
+            {q ? (
+              <>
+                <p>
+                  Nothing matching &ldquo;{q}&rdquo; in this period
+                  {all.length > 0 ? ` (${all.length} other transactions)` : ""}.
+                </p>
+                <p className="text-xs">
+                  Try{" "}
+                  <Link
+                    href={`/admin/transactions?${new URLSearchParams({ from: "2020-01-01", to: today, q })}`}
+                    className="font-medium text-accent hover:underline"
+                  >
+                    searching all time
+                  </Link>
+                  .
+                </p>
+              </>
+            ) : (
+              <p>No transactions in this period.</p>
+            )}
+          </div>
         ) : (
           rows.map((t) => <Row key={`${t.kind}-${t.reference}-${t.occurredAt}`} t={t} />)
         )}

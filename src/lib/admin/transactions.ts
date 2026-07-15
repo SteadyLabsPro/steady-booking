@@ -73,6 +73,24 @@ export async function getAdminTransactions(
   /* eslint-enable @typescript-eslint/no-explicit-any */
 }
 
+/**
+ * Free-text filter across customer name, email, phone, our booking/pass
+ * reference and the Stripe ref. Applied to whatever the date range returned,
+ * so the on-screen list and the CSV always match.
+ */
+export function filterTransactions(
+  rows: AdminTransaction[],
+  q: string | undefined | null,
+): AdminTransaction[] {
+  const needle = (q ?? "").trim().toLowerCase();
+  if (!needle) return rows;
+  return rows.filter((r) =>
+    [r.customerName, r.email, r.phone, r.reference, r.stripeRef].some((f) =>
+      f.toLowerCase().includes(needle),
+    ),
+  );
+}
+
 /** Money actually taken in the range (excludes £0 comps and refunds). */
 export function revenueMinor(rows: AdminTransaction[]): number {
   return rows
