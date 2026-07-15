@@ -60,6 +60,22 @@ export const tenant: TenantConfig = {
       },
     ],
   },
+  howItWorks: [
+    { icon: "calendar", text: "Pick your date and time slot" },
+    { icon: "device", text: "Book online" },
+    {
+      icon: "key",
+      text: "Ask at the downstairs bar inside Advantage Padel for an access code",
+    },
+    {
+      icon: "sauna",
+      text: "Relax and enjoy your experience at Tidehouse, Mudeford",
+    },
+  ],
+  accessNotice: {
+    heading: "Access code",
+    body: "You will need an access code to enter the facilities. Please head to the downstairs bar at Advantage Padel and ask for your access code to gain entry. The code changes regularly for security purposes.",
+  },
   features: [
     { label: "Hot coal sauna", icon: "sauna" },
     { label: "2 cold plunges", icon: "plunge" },

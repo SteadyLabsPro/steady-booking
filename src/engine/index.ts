@@ -7,6 +7,8 @@ export type {
   TenantFeature,
   TenantHero,
   TenantHeroImage,
+  TenantStep,
+  TenantNotice,
   TenantWaiver,
   WaiverSection,
   WaiverItem,

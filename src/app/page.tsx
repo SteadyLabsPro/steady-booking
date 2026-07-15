@@ -10,6 +10,7 @@ import {
 } from "@/components/booking/booking-view";
 import { BuyPass } from "@/components/booking/buy-pass";
 import { HeroSlider } from "@/components/booking/hero-slider";
+import { HowItWorks } from "@/components/booking/how-it-works";
 import { Icon } from "@/components/icons";
 import { isStripeConfigured } from "@/lib/payments/stripe";
 
@@ -103,6 +104,14 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
               </div>
             )}
           </div>
+
+          <a
+            href="#how-it-works"
+            className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent underline-offset-4 hover:underline"
+          >
+            How it works — you&rsquo;ll need an access code
+            <Icon name="arrow-right" className="h-3.5 w-3.5 rotate-90" />
+          </a>
         </div>
 
         {/* Full-bleed photos — on top when stacked (mobile), right on desktop */}
@@ -206,6 +215,12 @@ export default async function BookingPage() {
           todayKey={todayKey}
           currency={tenant.currency}
           waiver={tenant.waiver}
+        />
+
+        <HowItWorks
+          steps={tenant.howItWorks}
+          notice={tenant.accessNotice}
+          className={cn(BOUNDS, "py-12")}
         />
       </main>
 

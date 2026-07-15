@@ -11,7 +11,23 @@ export type IconKey =
   | "sauna"
   | "plunge"
   | "sea"
-  | "private";
+  | "private"
+  | "calendar"
+  | "device"
+  | "key"
+  | "check";
+
+/** One step in the "how it works" explainer. */
+export interface TenantStep {
+  icon: IconKey;
+  text: string;
+}
+
+/** A prominent notice repeated on the site and in confirmation emails. */
+export interface TenantNotice {
+  heading: string;
+  body: string;
+}
 
 /** A single highlight shown in the feature strip / mobile tab bar. */
 export interface TenantFeature {
@@ -162,6 +178,10 @@ export interface TenantConfig {
   hero: TenantHero;
   /** Highlights shown in the feature strip. */
   features: TenantFeature[];
+  /** "How it works" steps, shown on the home page in order. */
+  howItWorks: TenantStep[];
+  /** Entry/access instructions — shown on site and in confirmation emails. */
+  accessNotice: TenantNotice;
   /** Waiver policy and copy for this tenant. */
   waiver: TenantWaiver;
 }

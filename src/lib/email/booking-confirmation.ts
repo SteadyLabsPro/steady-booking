@@ -38,6 +38,20 @@ export function renderBookingConfirmation(d: ConfirmationData): {
           <tr><td style="padding:12px 0 0;color:#6f6a62;border-top:1px solid #e7e1d6;">Total</td><td style="padding:12px 0 0;text-align:right;font-weight:700;border-top:1px solid #e7e1d6;">${total}</td></tr>
         </table>
         <p style="color:#9a948b;font-size:12px;margin:20px 0 0;">Booking reference ${d.bookingRef}</p>
+
+        <!-- Access code — guests can't get in without this, so make it loud. -->
+        <table style="width:100%;border-collapse:collapse;margin:24px 0 0;">
+          <tr>
+            <td style="background:#173a4e;border-radius:10px 10px 0 0;padding:12px 16px;">
+              <span style="color:#c2a06a;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">${tenant.accessNotice.heading}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f5eee6;border:1px solid #c2a06a;border-top:0;border-radius:0 0 10px 10px;padding:16px;">
+              <p style="margin:0;color:#211f1c;font-size:14px;line-height:1.5;">${tenant.accessNotice.body}</p>
+            </td>
+          </tr>
+        </table>
       </div>
       <div style="padding:16px 24px;background:#f5eee6;text-align:center;color:#6f6a62;font-size:12px;">
         ${tenant.name} &middot; ${tenant.address}

@@ -17,7 +17,9 @@ export type IconName =
   | "plus"
   | "minus"
   | "close"
-  | "check";
+  | "check"
+  | "key"
+  | "device";
 
 function paths(name: IconName) {
   switch (name) {
@@ -48,6 +50,21 @@ function paths(name: IconName) {
           <circle cx="9.5" cy="8" r="3.5" />
           <path d="M21 20v-1a4 4 0 0 0-3-3.87" />
           <path d="M15.5 4.13a4 4 0 0 1 0 7.75" />
+        </>
+      );
+    case "key": // access code
+      return (
+        <>
+          <circle cx="7.5" cy="15.5" r="4.5" />
+          <path d="M10.7 12.3 21 2" />
+          <path d="m15.5 7.5 3 3L22 7l-3-3" />
+        </>
+      );
+    case "device": // booking online
+      return (
+        <>
+          <rect x="6" y="2" width="12" height="20" rx="2" />
+          <line x1="10" y1="18.5" x2="14" y2="18.5" />
         </>
       );
     case "arrow-right":
