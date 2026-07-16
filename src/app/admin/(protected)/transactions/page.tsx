@@ -8,6 +8,7 @@ import {
   getAdminTransactions,
   filterTransactions,
   revenueMinor,
+  refundedMinor,
   isDateKey,
   todayKey,
   type AdminTransaction,
@@ -86,13 +87,24 @@ function Row({ t }: { t: AdminTransaction }) {
           {t.stripeRef ? ` · Stripe ${t.stripeRef.slice(0, 14)}…` : " · not Stripe"}
         </span>
       </div>
-      <span
-        className={cn(
-          "shrink-0 text-base font-semibold tabular-nums",
-          t.amountMinor === 0 && "text-muted",
+      <span className="flex shrink-0 flex-col items-end">
+        <span
+          className={cn(
+            "text-base font-semibold tabular-nums",
+            (t.amountMinor === 0 || t.refundedMinor >= t.amountMinor) &&
+              "text-muted",
+            t.refundedMinor > 0 &&
+              t.refundedMinor >= t.amountMinor &&
+              "line-through",
+          )}
+        >
+          {formatPrice(t.amountMinor, tenant.currency)}
+        </span>
+        {t.refundedMinor > 0 && (
+          <span className="text-xs font-medium text-red-600 tabular-nums">
+            −{formatPrice(t.refundedMinor, tenant.currency)} refunded
+          </span>
         )}
-      >
-        {formatPrice(t.amountMinor, tenant.currency)}
       </span>
     </div>
   );
@@ -115,7 +127,7 @@ export default async function TransactionsPage({
   const money = (minor: number) => formatPrice(minor, tenant.currency);
 
   const taken = revenueMinor(rows);
-  const bookings = rows.filter((r) => r.kind === "booking");
+  const refunded = refundedMinor(rows);
   const passes = rows.filter((r) => r.kind === "pass");
   const qs = new URLSearchParams({ from, to, ...(q ? { q } : {}) });
   const exportHref = `/admin/transactions/export?${qs}`;
@@ -192,9 +204,9 @@ export default async function TransactionsPage({
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Tile label="Taken" value={money(taken)} />
+        <Tile label="Net taken" value={money(taken)} />
+        <Tile label="Refunded" value={money(refunded)} />
         <Tile label="Transactions" value={String(rows.length)} />
-        <Tile label="Bookings" value={String(bookings.length)} />
         <Tile label="Pass sales" value={String(passes.length)} />
       </div>
 
@@ -231,8 +243,9 @@ export default async function TransactionsPage({
         {from === to
           ? `Showing ${formatSessionDate(sessionISO(from), tenant.timezone)}.`
           : `Showing ${formatSessionDate(sessionISO(from), tenant.timezone)} – ${formatSessionDate(sessionISO(to), tenant.timezone)}.`}{" "}
-        &ldquo;Taken&rdquo; counts paid transactions only — complimentary and
-        pass-redemption bookings are £0, so nothing double-counts.
+        &ldquo;Net taken&rdquo; is money kept after refunds, so it reconciles
+        with Stripe. £0 rows (complimentary and pass redemptions) don&rsquo;t
+        add anything.
       </p>
     </div>
   );

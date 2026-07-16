@@ -39,4 +39,14 @@ export interface PaymentUpdate {
   paymentStatus: PaymentStatus;
   /** Whether this event should also confirm the booking. */
   confirmBooking: boolean;
+  /** PaymentIntent id, stored so a later refund can be matched to the booking. */
+  paymentIntentId?: string | null;
+}
+
+/** A refund derived from a provider webhook, matched by PaymentIntent. */
+export interface RefundInfo {
+  paymentIntentId: string;
+  amountRefundedMinor: number;
+  chargeAmountMinor: number;
+  fullyRefunded: boolean;
 }

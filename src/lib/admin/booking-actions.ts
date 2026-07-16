@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
 import { tenant } from "@/config/tenant.config";
 import { sendBookingConfirmation } from "@/lib/email/booking-confirmation";
+import { createRefund, isStripeConfigured } from "@/lib/payments/stripe";
 import { requireAdmin } from "./auth";
 
 type ServiceClient = ReturnType<typeof createServiceClient>;
@@ -28,24 +29,78 @@ async function customerNeedsWaiver(
   );
 }
 
-/**
- * Cancel a booking — sets status to 'cancelled' (never deletes). The
- * availability view already excludes cancelled bookings, so the spot frees
- * automatically. Guarded; no-op if the booking is already cancelled.
- */
-export async function cancelBooking(id: string): Promise<void> {
-  await requireAdmin();
+export interface CancelResult {
+  ok: boolean;
+  error?: string;
+}
 
+/**
+ * Cancel a booking — sets status to 'cancelled' (never deletes); the spot frees
+ * automatically. With `refund`, it also gives the money back: a Stripe refund
+ * for a card booking, or the credit(s) returned for a pass redemption.
+ */
+export async function cancelBooking(
+  id: string,
+  opts?: { refund?: boolean },
+): Promise<CancelResult> {
+  await requireAdmin();
   const sb = createServiceClient();
+
+  const { data: bk } = await sb
+    .from("bookings")
+    .select(
+      "quantity, total_minor, refunded_minor, payment_status, payment_intent_id, pass_id, status",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (!bk) return { ok: false, error: "Booking not found." };
+  if (bk.status === "cancelled") return { ok: true };
+
+  const refund = opts?.refund === true;
+  const canRefundMoney =
+    !bk.pass_id &&
+    bk.payment_status === "paid" &&
+    !!bk.payment_intent_id &&
+    (bk.refunded_minor ?? 0) < bk.total_minor;
+
+  // Issue the Stripe refund first — if it fails we don't cancel, so nothing
+  // goes out of sync.
+  if (refund && canRefundMoney && isStripeConfigured()) {
+    try {
+      await createRefund(bk.payment_intent_id as string);
+    } catch (e) {
+      return {
+        ok: false,
+        error: `Refund failed: ${(e as Error).message}. Booking not cancelled.`,
+      };
+    }
+  }
+
+  const patch: Record<string, unknown> = { status: "cancelled" };
+  // Optimistically net it out; the charge.refunded webhook confirms the same.
+  if (refund && canRefundMoney) {
+    patch.refunded_minor = bk.total_minor;
+    patch.payment_status = "refunded";
+  }
+
   const { error } = await sb
     .from("bookings")
-    .update({ status: "cancelled" })
+    .update(patch)
     .eq("id", id)
     .neq("status", "cancelled");
+  if (error) return { ok: false, error: `Cancel failed: ${error.message}` };
 
-  if (error) throw new Error(`cancel failed: ${error.message}`);
+  // Pass redemption: hand the credit(s) back to the pass.
+  if (refund && bk.pass_id) {
+    await sb.rpc("return_pass_credits", {
+      p_pass_id: bk.pass_id,
+      p_qty: bk.quantity,
+    });
+  }
+
   revalidatePath("/admin");
   revalidatePath("/");
+  return { ok: true };
 }
 
 /** Admin's explicit payment choice for a manual booking. */

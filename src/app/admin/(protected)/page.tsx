@@ -84,7 +84,7 @@ function BookingRow({ r }: { r: AdminBookingRow }) {
           {formatPrice(r.totalMinor, tenant.currency)}
         </span>
         {(r.status === "confirmed" || r.status === "pending") && (
-          <CancelBookingButton id={r.id} />
+          <CancelBookingButton id={r.id} refundKind={r.refundKind} />
         )}
       </div>
     </div>

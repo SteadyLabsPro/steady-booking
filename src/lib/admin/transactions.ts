@@ -21,6 +21,8 @@ export interface AdminTransaction {
   /** Guests for a booking; credits for a pass. */
   quantity: number;
   amountMinor: number;
+  /** How much of amountMinor was refunded (0 if none). */
+  refundedMinor: number;
   paymentStatus: PaymentStatus;
   status: string;
   /** Short internal reference (what the customer sees). */
@@ -65,6 +67,7 @@ export async function getAdminTransactions(
     sessionStartsAt: r.session_starts_at ?? null,
     quantity: r.quantity ?? 0,
     amountMinor: r.amount_minor ?? 0,
+    refundedMinor: r.refunded_minor ?? 0,
     paymentStatus: (r.payment_status ?? "pending") as PaymentStatus,
     status: r.status ?? "",
     reference: r.reference ?? "",
@@ -91,9 +94,13 @@ export function filterTransactions(
   );
 }
 
-/** Money actually taken in the range (excludes £0 comps and refunds). */
+/** Money actually kept in the range: gross minus anything refunded, so it
+ * reconciles with Stripe. */
 export function revenueMinor(rows: AdminTransaction[]): number {
-  return rows
-    .filter((r) => r.paymentStatus === "paid")
-    .reduce((sum, r) => sum + r.amountMinor, 0);
+  return rows.reduce((sum, r) => sum + (r.amountMinor - r.refundedMinor), 0);
+}
+
+/** Total refunded in the range. */
+export function refundedMinor(rows: AdminTransaction[]): number {
+  return rows.reduce((sum, r) => sum + r.refundedMinor, 0);
 }

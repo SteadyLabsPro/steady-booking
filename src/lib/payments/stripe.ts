@@ -1,5 +1,10 @@
 import Stripe from "stripe";
-import type { CheckoutParams, CheckoutResult, PaymentUpdate } from "./types";
+import type {
+  CheckoutParams,
+  CheckoutResult,
+  PaymentUpdate,
+  RefundInfo,
+} from "./types";
 
 /**
  * Stripe adapter — the ONLY place with Stripe-specific logic. Everything else
@@ -98,6 +103,7 @@ export async function createPassCheckoutSession(p: {
 /** A completed online pass purchase, or null if the event isn't one. */
 export interface PassPurchase {
   ref: string;
+  paymentIntentId: string | null;
   bundleId: string;
   firstName: string;
   lastName: string;
@@ -111,12 +117,40 @@ export function passPurchaseForEvent(event: Stripe.Event): PassPurchase | null {
   if (s.metadata?.type !== "pass") return null;
   return {
     ref: s.id,
+    paymentIntentId:
+      typeof s.payment_intent === "string"
+        ? s.payment_intent
+        : (s.payment_intent?.id ?? null),
     bundleId: s.metadata.bundleId ?? "",
     firstName: s.metadata.firstName ?? "",
     lastName: s.metadata.lastName ?? "",
     email: s.metadata.email ?? s.customer_email ?? "",
     phone: s.metadata.phone ?? "",
   };
+}
+
+/** A refund from a charge.refunded event, matched by PaymentIntent. */
+export function refundForEvent(event: Stripe.Event): RefundInfo | null {
+  if (event.type !== "charge.refunded") return null;
+  const c = event.data.object as Stripe.Charge;
+  const pi =
+    typeof c.payment_intent === "string"
+      ? c.payment_intent
+      : (c.payment_intent?.id ?? null);
+  if (!pi) return null;
+  const refunded = c.amount_refunded ?? 0;
+  const total = c.amount ?? 0;
+  return {
+    paymentIntentId: pi,
+    amountRefundedMinor: refunded,
+    chargeAmountMinor: total,
+    fullyRefunded: total > 0 && refunded >= total,
+  };
+}
+
+/** Refund a payment in full (used by the admin cancel-and-refund action). */
+export async function createRefund(paymentIntentId: string): Promise<void> {
+  await stripe().refunds.create({ payment_intent: paymentIntentId });
 }
 
 /** Verify and parse a webhook payload (throws on bad signature). */
@@ -136,7 +170,16 @@ export function paymentUpdateForEvent(
   switch (event.type) {
     case "checkout.session.completed": {
       const s = event.data.object as Stripe.Checkout.Session;
-      return { ref: s.id, paymentStatus: "paid", confirmBooking: true };
+      const pi =
+        typeof s.payment_intent === "string"
+          ? s.payment_intent
+          : (s.payment_intent?.id ?? null);
+      return {
+        ref: s.id,
+        paymentStatus: "paid",
+        confirmBooking: true,
+        paymentIntentId: pi,
+      };
     }
     case "checkout.session.expired": {
       const s = event.data.object as Stripe.Checkout.Session;

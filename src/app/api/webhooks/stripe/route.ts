@@ -3,6 +3,7 @@ import {
   constructWebhookEvent,
   paymentUpdateForEvent,
   passPurchaseForEvent,
+  refundForEvent,
 } from "@/lib/payments/stripe";
 import { createServiceClient } from "@/lib/supabase/server";
 import { tenant } from "@/config/tenant.config";
@@ -29,6 +30,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid signature" }, { status: 400 });
   }
 
+  // Refund (from Stripe or our cancel-and-refund) — net it out on the matching
+  // booking or pass so figures reconcile with Stripe.
+  const refund = refundForEvent(event);
+  if (refund) {
+    const sb = createServiceClient();
+    const { data: booking } = await sb
+      .from("bookings")
+      .update({
+        refunded_minor: refund.amountRefundedMinor,
+        ...(refund.fullyRefunded ? { payment_status: "refunded" } : {}),
+      })
+      .eq("payment_intent_id", refund.paymentIntentId)
+      .select("id");
+    // If no booking matched, it may be a pass purchase.
+    if (!booking || booking.length === 0) {
+      await sb
+        .from("passes")
+        .update({ refunded_minor: refund.amountRefundedMinor })
+        .eq("payment_intent_id", refund.paymentIntentId);
+    }
+    return NextResponse.json({ received: true });
+  }
+
   // Online pass purchase: grant the pass (idempotent) and email the buyer.
   const pass = passPurchaseForEvent(event);
   if (pass) {
@@ -45,6 +69,7 @@ export async function POST(req: Request) {
         p_price_paid_minor: bundle.priceMinor,
         p_valid_months: bundle.validityMonths,
         p_purchase_ref: pass.ref,
+        p_payment_intent: pass.paymentIntentId,
       });
       const row = Array.isArray(data) ? data[0] : data;
       // Only email on first creation, not on a re-delivered webhook.
@@ -62,12 +87,15 @@ export async function POST(req: Request) {
       payment_status: string;
       status?: string;
       paid_at?: string;
+      payment_intent_id?: string;
     } = {
       payment_status: update.paymentStatus,
     };
     if (update.confirmBooking) patch.status = "confirmed";
     // Stamp when the money actually landed, so accounting reconciles with Stripe.
     if (update.paymentStatus === "paid") patch.paid_at = new Date().toISOString();
+    // Store the PaymentIntent so a later refund can be matched back.
+    if (update.paymentIntentId) patch.payment_intent_id = update.paymentIntentId;
     const { data } = await sb
       .from("bookings")
       .update(patch)

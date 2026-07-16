@@ -36,6 +36,8 @@ export interface AdminBookingRow {
   waiverSigned: boolean;
   paymentStatus: PaymentStatus;
   totalMinor: number;
+  /** What "refund on cancel" would do: give money back, return a credit, or nothing. */
+  refundKind: "money" | "credit" | null;
 }
 
 function windowBounds(window: AdminWindow): { startISO: string; endISO: string } {
@@ -81,6 +83,7 @@ export async function getAdminBookings(
     .from("bookings")
     .select(
       `id, quantity, total_minor, status, payment_status, expires_at,
+       pass_id, payment_intent_id, refunded_minor,
        sessions!inner ( starts_at ),
        customers ( first_name, last_name, email, phone, waivers ( version ) )`,
     )
@@ -109,6 +112,17 @@ export async function getAdminBookings(
           ? "pending"
           : "expired";
 
+    let refundKind: "money" | "credit" | null = null;
+    if (b.status !== "cancelled") {
+      if (b.pass_id) refundKind = "credit";
+      else if (
+        b.payment_status === "paid" &&
+        b.payment_intent_id &&
+        (b.refunded_minor ?? 0) < b.total_minor
+      )
+        refundKind = "money";
+    }
+
     return {
       id: b.id,
       startsAt,
@@ -121,6 +135,7 @@ export async function getAdminBookings(
       waiverSigned: versions.includes(activeVersion),
       paymentStatus: (b.payment_status ?? "pending") as PaymentStatus,
       totalMinor: b.total_minor,
+      refundKind,
     };
   });
   /* eslint-enable @typescript-eslint/no-explicit-any */
