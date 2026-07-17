@@ -36,11 +36,6 @@ export function LegalShell({
         </h1>
         <p className="mt-2 text-sm text-muted">Last updated {updated}</p>
 
-        <div className="mt-6 rounded-lg border border-dashed border-[#c2a06a]/60 bg-accent/5 p-4 text-sm text-muted">
-          This is a working draft to get you started. Please review and finalise
-          it (ideally with your own legal advice) before launch.
-        </div>
-
         <div className="mt-8 flex flex-col gap-7 text-sm leading-relaxed text-foreground/90">
           {children}
         </div>
