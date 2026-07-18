@@ -82,7 +82,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
                 className="inline-flex w-full items-center justify-start gap-2 whitespace-nowrap rounded-md bg-accent px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90 sm:w-auto"
               >
                 Book a session
-                <Icon name="arrow-right" className="h-4 w-4 rotate-90" />
+                <Icon name="arrow-down" className="h-4 w-4" strokeWidth={1.4} />
               </a>
               <span className="pl-5 text-xs text-muted">
                 {price} pp / {slotMinutes} min
@@ -113,7 +113,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
             className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent underline-offset-4 hover:underline"
           >
             How it works — you&rsquo;ll need an access code
-            <Icon name="arrow-right" className="h-3.5 w-3.5 rotate-90" />
+            <Icon name="arrow-down" className="h-4 w-4" strokeWidth={1.4} />
           </a>
         </div>
 

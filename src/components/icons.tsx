@@ -11,6 +11,7 @@ export type IconName =
   | "sea"
   | "private"
   | "arrow-right"
+  | "arrow-down"
   | "chevron-right"
   | "calendar"
   | "menu"
@@ -74,6 +75,13 @@ function paths(name: IconName) {
           <polyline points="12 5 19 12 12 19" />
         </>
       );
+    case "arrow-down": // slim, elongated — a more refined downward cue
+      return (
+        <>
+          <line x1="12" y1="3.5" x2="12" y2="19" />
+          <polyline points="8.4 15 12 19 15.6 15" />
+        </>
+      );
     case "chevron-right":
       return <polyline points="9 18 15 12 9 6" />;
     case "calendar":
@@ -117,16 +125,18 @@ function paths(name: IconName) {
 export function Icon({
   name,
   className,
+  strokeWidth = 1.75,
 }: {
   name: IconName;
   className?: string;
+  strokeWidth?: number;
 }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.75"
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
