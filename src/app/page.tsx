@@ -72,17 +72,19 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          {/* Mobile: a shrink-to-fit grid so both CTAs match the widest one.
+              Desktop: a normal side-by-side row. */}
+          <div className="grid w-fit grid-cols-1 gap-4 sm:flex sm:w-auto sm:flex-row sm:items-start">
             {/* Primary — book a single session */}
             <div className="flex flex-col items-start gap-1.5">
               <a
                 href="#book"
-                className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-accent px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90 sm:w-auto"
+                className="inline-flex w-full items-center justify-start gap-2 whitespace-nowrap rounded-md bg-accent px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90 sm:w-auto"
               >
                 Book a session
                 <Icon name="arrow-right" className="h-4 w-4 rotate-90" />
               </a>
-              <span className="w-full text-center text-xs text-muted sm:w-auto sm:pl-5 sm:text-left">
+              <span className="pl-5 text-xs text-muted">
                 {price} pp / {slotMinutes} min
               </span>
             </div>
@@ -92,11 +94,11 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
               <div className="flex flex-col items-start gap-1.5">
                 <BuyPass
                   canBuyOnline={canBuyOnline}
-                  className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-md bg-[#c2a06a] px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-[#b5934f] sm:w-auto"
+                  className="inline-flex w-full items-center justify-start whitespace-nowrap rounded-md bg-[#c2a06a] px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-[#b5934f] sm:w-auto"
                 >
                   {pass.sessions}-session pass
                 </BuyPass>
-                <span className="w-full text-center text-xs text-muted sm:w-auto sm:pl-5 sm:text-left">
+                <span className="pl-5 text-xs text-muted">
                   {formatPrice(pass.priceMinor, tenant.currency)}
                   {pass.validityMonths > 0
                     ? ` · valid ${pass.validityMonths} months`
