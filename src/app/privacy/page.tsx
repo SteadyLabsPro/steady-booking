@@ -3,7 +3,7 @@ import { tenant } from "@/config/tenant.config";
 import { LegalShell, LegalSection } from "@/components/legal-shell";
 
 export const metadata: Metadata = {
-  title: `Privacy Policy · ${tenant.name}`,
+  title: "Privacy Policy",
 };
 
 export default function PrivacyPage() {

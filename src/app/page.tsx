@@ -11,6 +11,7 @@ import {
 import { BuyPass } from "@/components/booking/buy-pass";
 import { HeroSlider } from "@/components/booking/hero-slider";
 import { HowItWorks } from "@/components/booking/how-it-works";
+import { StructuredData } from "@/components/structured-data";
 import { Icon } from "@/components/icons";
 import { isStripeConfigured } from "@/lib/payments/stripe";
 
@@ -195,6 +196,7 @@ export default async function BookingPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      <StructuredData />
       <header className="border-b border-[#c2a06a]/70 bg-[#f5eee6]">
         <div
           className={cn(BOUNDS, "flex items-center justify-between gap-3 py-4")}

@@ -4,7 +4,7 @@ import { formatPrice } from "@/engine";
 import { LegalShell, LegalSection } from "@/components/legal-shell";
 
 export const metadata: Metadata = {
-  title: `Terms & Conditions · ${tenant.name}`,
+  title: "Terms & Conditions",
 };
 
 export default function TermsPage() {
