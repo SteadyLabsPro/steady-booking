@@ -77,7 +77,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
             <div className="flex flex-col items-start gap-1.5">
               <a
                 href="#book"
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-accent px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90"
+                className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-accent px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent/90 sm:w-auto"
               >
                 Book a session
                 <Icon name="arrow-right" className="h-4 w-4 rotate-90" />
@@ -92,7 +92,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
               <div className="flex flex-col items-start gap-1.5">
                 <BuyPass
                   canBuyOnline={canBuyOnline}
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-[#c2a06a] px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-[#b5934f]"
+                  className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-md bg-[#c2a06a] px-5 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-[#b5934f] sm:w-auto"
                 >
                   {pass.sessions}-session pass
                 </BuyPass>
