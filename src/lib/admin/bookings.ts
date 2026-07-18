@@ -5,19 +5,17 @@ import type { PaymentStatus } from "@/lib/payments/types";
 import {
   sessionDateKey,
   addDaysKey,
-  dayKeyWeekday,
   zonedTimeToUtcISO,
   formatSessionDate,
   formatSessionTime,
 } from "@/engine";
 
 /**
- * Admin booking reads. Windows are by SESSION DATE (starts_at) in the tenant
- * timezone. Runs server-side with the service role. Booking status is derived
- * for display: an expired hold (pending past expires_at) shows as "expired".
+ * Admin booking reads by SESSION DATE (starts_at) in the tenant timezone, over
+ * a from/to range. Runs server-side with the service role. Booking status is
+ * derived for display: an expired hold (pending past expires_at) shows as
+ * "expired".
  */
-
-export type AdminWindow = "today" | "week" | "month";
 
 export type AdminBookingStatus =
   | "confirmed"
@@ -40,43 +38,14 @@ export interface AdminBookingRow {
   refundKind: "money" | "credit" | null;
 }
 
-function windowBounds(window: AdminWindow): { startISO: string; endISO: string } {
-  const tz = tenant.timezone;
-  const todayKey = sessionDateKey(new Date().toISOString(), tz);
-
-  if (window === "today") {
-    return {
-      startISO: zonedTimeToUtcISO(todayKey, "00:00", tz),
-      endISO: zonedTimeToUtcISO(addDaysKey(todayKey, 1), "00:00", tz),
-    };
-  }
-
-  if (window === "week") {
-    // Calendar week, Monday–Sunday.
-    const weekday = dayKeyWeekday(todayKey); // 0 = Sun … 6 = Sat
-    const mondayKey = addDaysKey(todayKey, -((weekday + 6) % 7));
-    return {
-      startISO: zonedTimeToUtcISO(mondayKey, "00:00", tz),
-      endISO: zonedTimeToUtcISO(addDaysKey(mondayKey, 7), "00:00", tz),
-    };
-  }
-
-  // Calendar month.
-  const [y, m] = todayKey.split("-").map(Number);
-  const firstKey = `${y}-${String(m).padStart(2, "0")}-01`;
-  const nextY = m === 12 ? y + 1 : y;
-  const nextM = m === 12 ? 1 : m + 1;
-  const firstNextKey = `${nextY}-${String(nextM).padStart(2, "0")}-01`;
-  return {
-    startISO: zonedTimeToUtcISO(firstKey, "00:00", tz),
-    endISO: zonedTimeToUtcISO(firstNextKey, "00:00", tz),
-  };
-}
-
+/** Bookings whose SESSION falls in [fromKey, toKey] (both inclusive). */
 export async function getAdminBookings(
-  window: AdminWindow,
+  fromKey: string,
+  toKey: string,
 ): Promise<AdminBookingRow[]> {
-  const { startISO, endISO } = windowBounds(window);
+  const tz = tenant.timezone;
+  const startISO = zonedTimeToUtcISO(fromKey, "00:00", tz);
+  const endISO = zonedTimeToUtcISO(addDaysKey(toKey, 1), "00:00", tz);
   const sb = createServiceClient();
 
   const { data, error } = await sb

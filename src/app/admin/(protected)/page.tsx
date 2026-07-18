@@ -1,16 +1,23 @@
 import Link from "next/link";
 import { tenant } from "@/config/tenant.config";
-import { formatPrice, formatSessionDate, formatSessionTime } from "@/engine";
+import {
+  formatPrice,
+  formatSessionDate,
+  formatSessionTime,
+  addDaysKey,
+  dayKeyWeekday,
+} from "@/engine";
 import { cn } from "@/lib/utils";
 import { Badge, type BadgeTone } from "@/components/admin/badge";
+import { Button } from "@/components/ui/button";
 import {
   getAdminBookings,
   getBookableSessions,
-  type AdminWindow,
   type AdminBookingStatus,
   type AdminBookingRow,
 } from "@/lib/admin/bookings";
 import { getRevenueSummary } from "@/lib/admin/revenue";
+import { isDateKey, todayKey } from "@/lib/admin/transactions";
 import { CancelBookingButton } from "@/components/admin/cancel-booking-button";
 import { AddBooking } from "@/components/admin/add-booking";
 import { SellPass } from "@/components/admin/sell-pass";
@@ -18,11 +25,19 @@ import { SellPass } from "@/components/admin/sell-pass";
 // Live booking data — never cache.
 export const dynamic = "force-dynamic";
 
-const WINDOWS: { key: AdminWindow; label: string }[] = [
-  { key: "today", label: "Today" },
-  { key: "week", label: "This week" },
-  { key: "month", label: "This month" },
-];
+/** Quick date-range presets for the bookings list, by session date. */
+function bookingPresets(today: string) {
+  const weekday = dayKeyWeekday(today); // 0 = Sun … 6 = Sat
+  const monday = addDaysKey(today, -((weekday + 6) % 7));
+  return [
+    { label: "Today", from: today, to: today },
+    { label: "Tomorrow", from: addDaysKey(today, 1), to: addDaysKey(today, 1) },
+    { label: "This week", from: monday, to: addDaysKey(monday, 6) },
+    { label: "Next 7 days", from: today, to: addDaysKey(today, 6) },
+    { label: "Next 30 days", from: today, to: addDaysKey(today, 29) },
+    { label: "Next 90 days", from: today, to: addDaysKey(today, 89) },
+  ];
+}
 
 const STATUS: Record<AdminBookingStatus, { tone: BadgeTone; label: string }> = {
   confirmed: { tone: "success", label: "Confirmed" },
@@ -94,20 +109,20 @@ function BookingRow({ r }: { r: AdminBookingRow }) {
 export default async function AdminDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ window?: string }>;
+  searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const sp = await searchParams;
-  const window: AdminWindow = (["today", "week", "month"] as const).includes(
-    sp.window as AdminWindow,
-  )
-    ? (sp.window as AdminWindow)
-    : "today";
+  const today = todayKey();
+  const from = isDateKey(sp.from) ? sp.from : today;
+  const toRaw = isDateKey(sp.to) ? sp.to : from;
+  const to = toRaw < from ? from : toRaw;
 
   const [rows, revenue, bookableSessions] = await Promise.all([
-    getAdminBookings(window),
+    getAdminBookings(from, to),
     getRevenueSummary(),
     getBookableSessions(),
   ]);
+  const presets = bookingPresets(today);
   const money = (minor: number) => formatPrice(minor, tenant.currency);
 
   // Expired holds are lapsed 15-min baskets — kept out of the main list.
@@ -143,26 +158,57 @@ export default async function AdminDashboardPage({
         </div>
       </div>
 
-      <div className="flex w-fit gap-1 rounded-lg border border-border bg-subtle p-1">
-        {WINDOWS.map((w) => (
-          <Link
-            key={w.key}
-            href={`/admin?window=${w.key}`}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              window === w.key
-                ? "bg-surface text-foreground shadow-sm"
-                : "text-muted hover:text-foreground",
-            )}
-          >
-            {w.label}
-          </Link>
-        ))}
+      {/* Date-range filter, by session date */}
+      <div className="flex flex-col gap-3">
+        <form
+          method="get"
+          className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-surface p-4"
+        >
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-muted">From</span>
+            <input
+              type="date"
+              name="from"
+              defaultValue={from}
+              className="h-10 rounded-md border border-border bg-surface px-3 text-sm outline-none focus:border-accent"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-muted">To</span>
+            <input
+              type="date"
+              name="to"
+              defaultValue={to}
+              className="h-10 rounded-md border border-border bg-surface px-3 text-sm outline-none focus:border-accent"
+            />
+          </label>
+          <Button type="submit">Show</Button>
+        </form>
+
+        <div className="flex flex-wrap gap-2">
+          {presets.map((p) => {
+            const activePreset = p.from === from && p.to === to;
+            return (
+              <Link
+                key={p.label}
+                href={`/admin?from=${p.from}&to=${p.to}`}
+                className={cn(
+                  "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+                  activePreset
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-border bg-surface text-muted hover:bg-subtle",
+                )}
+              >
+                {p.label}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {active.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted">
-          No bookings in this period.
+          No bookings in this date range.
         </div>
       ) : (
         <div className="flex flex-col gap-2">
