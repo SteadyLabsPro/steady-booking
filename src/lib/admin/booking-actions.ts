@@ -98,7 +98,7 @@ export async function cancelBooking(
     });
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/admin/bookings");
   revalidatePath("/");
   return { ok: true };
 }
@@ -196,7 +196,7 @@ export async function adminAddBooking(
   // Confirmed manual booking → send the customer their confirmation.
   await sendBookingConfirmation(row.booking_id);
 
-  revalidatePath("/admin");
+  revalidatePath("/admin/bookings");
   revalidatePath("/");
   return { ok: true, bookingId: row.booking_id };
 }

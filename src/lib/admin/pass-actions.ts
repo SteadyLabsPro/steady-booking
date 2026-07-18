@@ -51,7 +51,7 @@ export async function adminGrantPass(
   if (error) return { ok: false, reason: "error", message: error.message };
 
   const row = Array.isArray(data) ? data[0] : data;
-  revalidatePath("/admin");
+  revalidatePath("/admin/bookings");
   return {
     ok: true,
     passId: row.pass_id,

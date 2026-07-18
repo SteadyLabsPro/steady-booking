@@ -14,7 +14,7 @@ export function AdminNav() {
       {/* Desktop */}
       <nav className="hidden items-center gap-5 text-sm md:flex">
         <Link
-          href="/admin"
+          href="/admin/bookings"
           className="text-muted transition-colors hover:text-foreground"
         >
           Bookings
@@ -63,7 +63,7 @@ export function AdminNav() {
             />
             <div className="absolute right-0 top-full z-50 mt-2 flex w-44 flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-lg">
               <Link
-                href="/admin"
+                href="/admin/bookings"
                 onClick={() => setOpen(false)}
                 className="px-4 py-3 text-sm transition-colors hover:bg-subtle"
               >
