@@ -82,7 +82,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
                 Book a session
                 <Icon name="arrow-right" className="h-4 w-4 rotate-90" />
               </a>
-              <span className="pl-5 text-xs text-muted">
+              <span className="w-full text-center text-xs text-muted sm:w-auto sm:pl-5 sm:text-left">
                 {price} pp / {slotMinutes} min
               </span>
             </div>
@@ -96,7 +96,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
                 >
                   {pass.sessions}-session pass
                 </BuyPass>
-                <span className="pl-5 text-xs text-muted">
+                <span className="w-full text-center text-xs text-muted sm:w-auto sm:pl-5 sm:text-left">
                   {formatPrice(pass.priceMinor, tenant.currency)}
                   {pass.validityMonths > 0
                     ? ` · valid ${pass.validityMonths} months`
