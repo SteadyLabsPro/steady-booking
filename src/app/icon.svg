@@ -9,7 +9,7 @@
     font-weight="400"
     fill="#16394b"
   >
-    <text x="11" y="21.5" text-anchor="middle">T</text>
-    <text x="21" y="23.5" text-anchor="middle">H</text>
+    <text x="11" y="20.5" text-anchor="middle">T</text>
+    <text x="21" y="25.5" text-anchor="middle">H</text>
   </g>
 </svg>
