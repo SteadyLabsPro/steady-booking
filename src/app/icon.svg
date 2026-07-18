@@ -1,20 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#16394b" />
-  <path
-    d="M4 23c3-2.4 5.5-2.4 8.5 0s5.5 2.4 8.5 0 5.5-2.4 7-1"
-    fill="none"
-    stroke="#8aa0ab"
-    stroke-width="1.6"
-    stroke-linecap="round"
-  />
+  <!-- Brand ground: the logo's cream, rounded to a tab-friendly tile. -->
+  <rect width="32" height="32" rx="7" fill="#f4ebdd" />
+  <!-- Interlocked TH monogram, high-contrast serif to echo Fraunces. -->
   <text
     x="16"
-    y="19"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-size="15"
+    y="20.5"
+    font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif"
+    font-size="20"
     font-weight="600"
-    letter-spacing="0.5"
+    letter-spacing="-1.8"
     text-anchor="middle"
-    fill="#f4ebdd"
+    fill="#16394b"
   >TH</text>
+  <!-- The tide: a double swash, navy over muted steel, like the logo. -->
+  <path
+    d="M4.6 25.4 C 8.4 22.6, 12.2 28.1, 16 25.4 C 19.8 22.6, 23.6 28.1, 27.4 25.4"
+    fill="none"
+    stroke="#7d93a3"
+    stroke-width="1.5"
+    stroke-linecap="round"
+  />
+  <path
+    d="M4.6 23.7 C 8.4 20.9, 12.2 26.4, 16 23.7 C 19.8 20.9, 23.6 26.4, 27.4 23.7"
+    fill="none"
+    stroke="#16394b"
+    stroke-width="1.7"
+    stroke-linecap="round"
+  />
 </svg>
