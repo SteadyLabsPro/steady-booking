@@ -65,9 +65,10 @@ export async function cancelBooking(
 
   // Issue the Stripe refund first — if it fails we don't cancel, so nothing
   // goes out of sync.
+  let refundId: string | null = null;
   if (refund && canRefundMoney && isStripeConfigured()) {
     try {
-      await createRefund(bk.payment_intent_id as string);
+      refundId = await createRefund(bk.payment_intent_id as string);
     } catch (e) {
       return {
         ok: false,
@@ -89,6 +90,11 @@ export async function cancelBooking(
     .eq("id", id)
     .neq("status", "cancelled");
   if (error) return { ok: false, error: `Cancel failed: ${error.message}` };
+
+  // Store the refund reference (best-effort — no-op if the column predates 0014).
+  if (refundId) {
+    await sb.from("bookings").update({ refund_ref: refundId }).eq("id", id);
+  }
 
   // Pass redemption: hand the credit(s) back to the pass.
   if (refund && bk.pass_id) {

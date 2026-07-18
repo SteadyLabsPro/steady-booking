@@ -106,6 +106,11 @@ function Row({ t }: { t: AdminTransaction }) {
             −{formatPrice(t.refundedMinor, tenant.currency)} refunded
           </span>
         )}
+        {t.refundRef && (
+          <span className="text-[10px] text-muted">
+            refund {t.refundRef.slice(0, 14)}…
+          </span>
+        )}
         {t.kind === "booking" &&
           t.bookingId &&
           t.paymentStatus === "paid" &&

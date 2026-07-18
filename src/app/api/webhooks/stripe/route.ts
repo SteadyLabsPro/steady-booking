@@ -35,19 +35,31 @@ export async function POST(req: Request) {
   const refund = refundForEvent(event);
   if (refund) {
     const sb = createServiceClient();
-    const { data: booking } = await sb
-      .from("bookings")
-      .update({
-        refunded_minor: refund.amountRefundedMinor,
-        ...(refund.fullyRefunded ? { payment_status: "refunded" } : {}),
-      })
-      .eq("payment_intent_id", refund.paymentIntentId)
-      .select("id");
-    // If no booking matched, it may be a pass purchase.
-    if (!booking || booking.length === 0) {
+    const table =
+      (
+        await sb
+          .from("bookings")
+          .update({
+            refunded_minor: refund.amountRefundedMinor,
+            ...(refund.fullyRefunded ? { payment_status: "refunded" } : {}),
+          })
+          .eq("payment_intent_id", refund.paymentIntentId)
+          .select("id")
+      ).data?.length
+        ? "bookings"
+        : "passes";
+    // If no booking matched, it's a pass purchase.
+    if (table === "passes") {
       await sb
         .from("passes")
         .update({ refunded_minor: refund.amountRefundedMinor })
+        .eq("payment_intent_id", refund.paymentIntentId);
+    }
+    // Store the refund reference (best-effort — no-op if the column predates 0014).
+    if (refund.refundRef) {
+      await sb
+        .from(table)
+        .update({ refund_ref: refund.refundRef })
         .eq("payment_intent_id", refund.paymentIntentId);
     }
     return NextResponse.json({ received: true });

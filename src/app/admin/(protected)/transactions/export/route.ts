@@ -54,6 +54,7 @@ export async function GET(req: Request) {
     "Status",
     "Reference",
     "Stripe ref",
+    "Refund ref",
   ];
 
   const lines = [header.join(",")];
@@ -77,6 +78,7 @@ export async function GET(req: Request) {
         r.status,
         r.reference,
         r.stripeRef,
+        r.refundRef,
       ]
         .map(cell)
         .join(","),

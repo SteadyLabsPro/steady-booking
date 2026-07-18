@@ -49,4 +49,6 @@ export interface RefundInfo {
   amountRefundedMinor: number;
   chargeAmountMinor: number;
   fullyRefunded: boolean;
+  /** Provider refund id (re_…), for the accounts team. */
+  refundRef: string | null;
 }

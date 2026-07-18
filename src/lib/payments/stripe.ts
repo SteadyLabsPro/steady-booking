@@ -145,12 +145,18 @@ export function refundForEvent(event: Stripe.Event): RefundInfo | null {
     amountRefundedMinor: refunded,
     chargeAmountMinor: total,
     fullyRefunded: total > 0 && refunded >= total,
+    // Latest refund on the charge (Stripe lists newest first).
+    refundRef: c.refunds?.data?.[0]?.id ?? null,
   };
 }
 
-/** Refund a payment in full (used by the admin cancel-and-refund action). */
-export async function createRefund(paymentIntentId: string): Promise<void> {
-  await stripe().refunds.create({ payment_intent: paymentIntentId });
+/** Refund a payment in full (used by the admin cancel-and-refund action).
+ * Returns the refund id (re_…). */
+export async function createRefund(
+  paymentIntentId: string,
+): Promise<string | null> {
+  const r = await stripe().refunds.create({ payment_intent: paymentIntentId });
+  return r.id ?? null;
 }
 
 /** Verify and parse a webhook payload (throws on bad signature). */
