@@ -16,7 +16,6 @@ import {
   type AdminBookingStatus,
   type AdminBookingRow,
 } from "@/lib/admin/bookings";
-import { getRevenueSummary } from "@/lib/admin/revenue";
 import { isDateKey, todayKey } from "@/lib/admin/transactions";
 import { CancelBookingButton } from "@/components/admin/cancel-booking-button";
 import { AddBooking } from "@/components/admin/add-booking";
@@ -57,19 +56,6 @@ const PAYMENT: Record<
   refunded: { tone: "neutral", label: "Refunded" },
   cancelled: { tone: "neutral", label: "Payment cancelled" },
 };
-
-function RevenueTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-surface p-3">
-      <span className="text-[10px] font-medium uppercase tracking-wide text-muted">
-        {label}
-      </span>
-      <span className="text-base font-semibold tabular-nums sm:text-lg">
-        {value}
-      </span>
-    </div>
-  );
-}
 
 function BookingRow({ r }: { r: AdminBookingRow }) {
   return (
@@ -117,13 +103,11 @@ export default async function AdminDashboardPage({
   const toRaw = isDateKey(sp.to) ? sp.to : from;
   const to = toRaw < from ? from : toRaw;
 
-  const [rows, revenue, bookableSessions] = await Promise.all([
+  const [rows, bookableSessions] = await Promise.all([
     getAdminBookings(from, to),
-    getRevenueSummary(),
     getBookableSessions(),
   ]);
   const presets = bookingPresets(today);
-  const money = (minor: number) => formatPrice(minor, tenant.currency);
 
   // Expired holds are lapsed 15-min baskets — kept out of the main list.
   const active = rows.filter((r) => r.status !== "expired");
@@ -131,19 +115,6 @@ export default async function AdminDashboardPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="flex flex-col gap-2">
-        <div className="flex items-baseline justify-between gap-2">
-          <h1 className="text-lg font-semibold tracking-tight">Revenue</h1>
-          <p className="text-xs text-muted">Confirmed only</p>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          <RevenueTile label="Today" value={money(revenue.todayMinor)} />
-          <RevenueTile label="Week" value={money(revenue.weekMinor)} />
-          <RevenueTile label="Month" value={money(revenue.monthMinor)} />
-          <RevenueTile label="Year" value={money(revenue.yearMinor)} />
-        </div>
-      </section>
-
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h2 className="text-xl font-semibold tracking-tight">Bookings</h2>

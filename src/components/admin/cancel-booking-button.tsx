@@ -12,9 +12,12 @@ import { cancelBooking } from "@/lib/admin/booking-actions";
 export function CancelBookingButton({
   id,
   refundKind = null,
+  label = "Cancel",
 }: {
   id: string;
   refundKind?: "money" | "credit" | null;
+  /** Trigger text — "Cancel" on the bookings list, "Refund" on transactions. */
+  label?: string;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -40,7 +43,7 @@ export function CancelBookingButton({
         onClick={() => setConfirming(true)}
         className="text-sm text-muted transition-colors hover:text-red-600"
       >
-        Cancel
+        {label}
       </button>
     );
   }

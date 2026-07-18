@@ -4,6 +4,7 @@ import { formatPrice, formatSessionDate, formatSessionTime } from "@/engine";
 import { cn } from "@/lib/utils";
 import { Badge, type BadgeTone } from "@/components/admin/badge";
 import { Button } from "@/components/ui/button";
+import { CancelBookingButton } from "@/components/admin/cancel-booking-button";
 import {
   getAdminTransactions,
   filterTransactions,
@@ -87,7 +88,7 @@ function Row({ t }: { t: AdminTransaction }) {
           {t.stripeRef ? ` · Stripe ${t.stripeRef.slice(0, 14)}…` : " · not Stripe"}
         </span>
       </div>
-      <span className="flex shrink-0 flex-col items-end">
+      <span className="flex shrink-0 flex-col items-end gap-1">
         <span
           className={cn(
             "text-base font-semibold tabular-nums",
@@ -105,6 +106,16 @@ function Row({ t }: { t: AdminTransaction }) {
             −{formatPrice(t.refundedMinor, tenant.currency)} refunded
           </span>
         )}
+        {t.kind === "booking" &&
+          t.bookingId &&
+          t.paymentStatus === "paid" &&
+          t.amountMinor > t.refundedMinor && (
+            <CancelBookingButton
+              id={t.bookingId}
+              refundKind="money"
+              label="Refund"
+            />
+          )}
       </span>
     </div>
   );

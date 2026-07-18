@@ -29,6 +29,8 @@ export interface AdminTransaction {
   reference: string;
   /** Stripe Checkout Session id — blank for non-Stripe (admin/comp/granted). */
   stripeRef: string;
+  /** Full booking id (bookings only; null for a pass sale) — for refunds. */
+  bookingId: string | null;
 }
 
 /** yyyy-mm-dd. */
@@ -72,6 +74,7 @@ export async function getAdminTransactions(
     status: r.status ?? "",
     reference: r.reference ?? "",
     stripeRef: r.stripe_ref ?? "",
+    bookingId: r.booking_id ?? null,
   }));
   /* eslint-enable @typescript-eslint/no-explicit-any */
 }
