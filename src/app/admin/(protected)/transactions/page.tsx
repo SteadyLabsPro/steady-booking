@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Badge, type BadgeTone } from "@/components/admin/badge";
 import { Button } from "@/components/ui/button";
 import { CancelBookingButton } from "@/components/admin/cancel-booking-button";
+import { RefundPassButton } from "@/components/admin/refund-pass-button";
 import {
   getAdminTransactions,
   filterTransactions,
@@ -120,6 +121,12 @@ function Row({ t }: { t: AdminTransaction }) {
               refundKind="money"
               label="Refund"
             />
+          )}
+        {t.kind === "pass" &&
+          t.stripeRef &&
+          t.paymentStatus === "paid" &&
+          t.amountMinor > t.refundedMinor && (
+            <RefundPassButton purchaseRef={t.stripeRef} label="Refund" />
           )}
       </span>
     </div>
