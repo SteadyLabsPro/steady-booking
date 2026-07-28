@@ -78,7 +78,11 @@ export async function getAdminTransactions(
     stripeRef: r.stripe_ref ?? "",
     refundRef: r.refund_ref ?? "",
     bookingId: r.booking_id ?? null,
-  }));
+  }))
+    // Money-only list for reconciliation: drop £0 rows (pass-credit redemptions
+    // and comps) — no cash moved, so they don't belong on the accounts view.
+    // Fully-refunded real payments still show (their amount is > 0).
+    .filter((t: AdminTransaction) => t.amountMinor > 0);
   /* eslint-enable @typescript-eslint/no-explicit-any */
 }
 

@@ -11,6 +11,11 @@ const CARDS = [
     blurb: "View, refund & make bookings",
   },
   {
+    href: "/admin/passes",
+    title: "Passes",
+    blurb: "Credits used & remaining on each pass",
+  },
+  {
     href: "/admin/transactions",
     title: "Transactions",
     blurb: "Accounts, revenue & refunds",
@@ -29,7 +34,7 @@ export default function AdminHomePage() {
         Admin dashboard
       </h1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {CARDS.map((c) => (
           <Link
             key={c.href}
