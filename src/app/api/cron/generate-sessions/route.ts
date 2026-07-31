@@ -24,6 +24,17 @@ export async function GET(req: Request) {
   }
   try {
     const result = await generateSessions();
+    // Dead-man's-switch: tell the uptime monitor the cron actually ran, so a
+    // silently-stopped job triggers an alert. No-op if HEALTHCHECK_URL isn't
+    // set; a failed ping must never break the job itself.
+    const ping = process.env.HEALTHCHECK_URL;
+    if (ping) {
+      try {
+        await fetch(ping, { cache: "no-store" });
+      } catch {
+        /* ignore — the job succeeding matters more than the ping */
+      }
+    }
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     return NextResponse.json(
