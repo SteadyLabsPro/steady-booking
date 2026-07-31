@@ -7,9 +7,15 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
-    # Group routine minor/patch bumps into one PR to cut noise; majors stay separate.
+    # Group routine minor/patch bumps into one PR to cut noise.
     groups:
       minor-and-patch:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # Skip ALL major-version bumps — those need a deliberate, tested upgrade,
+      # not an auto-PR (e.g. Next 15→16, TypeScript 5→7). Security fixes are
+      # still raised regardless of this rule, so protection is unchanged.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
