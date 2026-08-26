@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { tenant } from "@/config/tenant.config";
 import { formatPrice, formatSessionDate, formatSessionTime } from "@/engine";
 import { Badge, type BadgeTone } from "@/components/admin/badge";
+import { CancelBookingButton } from "@/components/admin/cancel-booking-button";
 import { getAdminPass, type AdminPassStatus } from "@/lib/admin/passes";
 
 // Live pass data — never cache.
@@ -110,18 +111,24 @@ export default async function PassDetailPage({
                       {b.guests} credit{b.guests === 1 ? "" : "s"}
                     </span>
                   </div>
-                  <Badge tone={s.tone}>{s.label}</Badge>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <Badge tone={s.tone}>{s.label}</Badge>
+                    {(b.status === "confirmed" || b.status === "pending") && (
+                      <CancelBookingButton
+                        id={b.id}
+                        refundKind="credit"
+                        label="Cancel"
+                      />
+                    )}
+                  </div>
                 </div>
               );
             })
           )}
         </section>
         <p className="text-xs text-muted">
-          To cancel a session and hand its credit back, open it on the{" "}
-          <Link href="/admin/bookings" className="text-accent hover:underline">
-            Bookings
-          </Link>{" "}
-          page and choose &ldquo;Cancel &amp; return credit&rdquo;.
+          Cancelling a session here hands its credit(s) straight back to this
+          pass and frees the slot.
         </p>
       </div>
     </div>

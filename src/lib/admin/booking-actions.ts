@@ -105,6 +105,7 @@ export async function cancelBooking(
   }
 
   revalidatePath("/admin/bookings");
+  revalidatePath("/admin/passes");
   revalidatePath("/");
   return { ok: true };
 }
