@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { tenant } from "@/config/tenant.config";
 import { formatSessionDate } from "@/engine";
 import { Badge, type BadgeTone } from "@/components/admin/badge";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/icons";
 import { getAdminPasses, type AdminPassStatus } from "@/lib/admin/passes";
 
 // Live pass data — never cache.
@@ -66,9 +68,10 @@ export default async function PassesPage({
           </div>
         ) : (
           passes.map((p) => (
-            <div
+            <Link
               key={p.id}
-              className="flex flex-col gap-2 border-b border-border py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between"
+              href={`/admin/passes/${p.id}`}
+              className="-mx-4 flex flex-col gap-2 border-b border-border px-4 py-3 transition-colors last:border-0 hover:bg-subtle sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex flex-col gap-0.5">
                 <span className="font-medium">{p.customerName || "—"}</span>
@@ -91,8 +94,12 @@ export default async function PassesPage({
                 <Badge tone={STATUS[p.status].tone}>
                   {STATUS[p.status].label}
                 </Badge>
+                <Icon
+                  name="chevron-right"
+                  className="hidden h-4 w-4 text-muted sm:block"
+                />
               </div>
-            </div>
+            </Link>
           ))
         )}
       </section>
