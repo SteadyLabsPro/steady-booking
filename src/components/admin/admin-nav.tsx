@@ -26,6 +26,12 @@ export function AdminNav() {
           Passes
         </Link>
         <Link
+          href="/admin/closures"
+          className="text-muted transition-colors hover:text-foreground"
+        >
+          Closures
+        </Link>
+        <Link
           href="/admin/transactions"
           className="text-muted transition-colors hover:text-foreground"
         >
@@ -81,6 +87,13 @@ export function AdminNav() {
                 className="border-t border-border px-4 py-3 text-sm transition-colors hover:bg-subtle"
               >
                 Passes
+              </Link>
+              <Link
+                href="/admin/closures"
+                onClick={() => setOpen(false)}
+                className="border-t border-border px-4 py-3 text-sm transition-colors hover:bg-subtle"
+              >
+                Closures
               </Link>
               <Link
                 href="/admin/transactions"
