@@ -69,6 +69,7 @@ function Hero({ canBuyOnline }: { canBuyOnline: boolean }) {
               <span className="text-sm text-muted">
                 Open {openTime}–{lastSlotTime}, {daysOfWeek.length} days a week.
               </span>
+              <span className="text-sm font-medium text-muted">Over 16s only.</span>
             </div>
           </div>
 
