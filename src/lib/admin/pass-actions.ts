@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
 import { tenant } from "@/config/tenant.config";
 import { createRefund, isStripeConfigured } from "@/lib/payments/stripe";
+import { sendPassConfirmation } from "@/lib/email/pass-confirmation";
 import { zonedTimeToUtcISO } from "@/engine";
 import { requireAdmin } from "./auth";
 import { unusedPaidRefundMinor } from "./passes";
@@ -70,6 +71,8 @@ export async function adminGrantPass(
   if (error) return { ok: false, reason: "error", message: error.message };
 
   const row = Array.isArray(data) ? data[0] : data;
+  // Email the customer their pass (credits, expiry, how to book). Never throws.
+  await sendPassConfirmation(row.pass_id);
   revalidatePath("/admin/bookings");
   return {
     ok: true,

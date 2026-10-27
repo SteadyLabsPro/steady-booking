@@ -25,9 +25,14 @@ export function renderPassConfirmation(d: PassData): {
   subject: string;
   html: string;
 } {
-  const paid = formatPrice(d.pricePaidMinor, tenant.currency);
+  // A £0 pass is a staff comp — say so rather than "Paid £0.00".
+  const paid =
+    d.pricePaidMinor > 0
+      ? formatPrice(d.pricePaidMinor, tenant.currency)
+      : "Complimentary";
   const expiry = formatExpiry(d.expiresAt);
-  const subject = `Your ${tenant.name} pass — ${d.credits} visits`;
+  const visits = `${d.credits} visit${d.credits === 1 ? "" : "s"}`;
+  const subject = `Your ${tenant.name} pass — ${visits}`;
 
   const expiryRow = expiry
     ? `<tr><td style="padding:8px 0;color:#6f6a62;">Valid until</td><td style="padding:8px 0;text-align:right;font-weight:600;">${expiry}</td></tr>`
@@ -44,9 +49,9 @@ export function renderPassConfirmation(d: PassData): {
         <h1 style="font-size:20px;margin:0 0 8px;">Your pass is ready, ${d.firstName}</h1>
         <p style="color:#6f6a62;font-size:14px;margin:0 0 20px;">Thank you. Your visits are on your account — just book with this email address and choose &ldquo;Use pass&rdquo;.</p>
         <table style="width:100%;font-size:14px;border-collapse:collapse;">
-          <tr><td style="padding:8px 0;color:#6f6a62;">Visits</td><td style="padding:8px 0;text-align:right;font-weight:600;">${d.credits} credits</td></tr>
+          <tr><td style="padding:8px 0;color:#6f6a62;">Visits</td><td style="padding:8px 0;text-align:right;font-weight:600;">${d.credits} credit${d.credits === 1 ? "" : "s"}</td></tr>
           ${expiryRow}
-          <tr><td style="padding:12px 0 0;color:#6f6a62;border-top:1px solid #e7e1d6;">Paid</td><td style="padding:12px 0 0;text-align:right;font-weight:700;border-top:1px solid #e7e1d6;">${paid}</td></tr>
+          <tr><td style="padding:12px 0 0;color:#6f6a62;border-top:1px solid #e7e1d6;">${d.pricePaidMinor > 0 ? "Paid" : "Price"}</td><td style="padding:12px 0 0;text-align:right;font-weight:700;border-top:1px solid #e7e1d6;">${paid}</td></tr>
         </table>
         <p style="color:#9a948b;font-size:12px;margin:20px 0 0;">1 credit = 1 person-session. Use them for yourself or bring guests.</p>
 
