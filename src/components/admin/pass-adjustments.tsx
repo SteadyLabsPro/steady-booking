@@ -37,7 +37,7 @@ export function PassAdjustments({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [credits, setCredits] = useState("2");
+  const [credits, setCredits] = useState("1");
   const [expiry, setExpiry] = useState(expiryKey);
   const [confirmRefund, setConfirmRefund] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
