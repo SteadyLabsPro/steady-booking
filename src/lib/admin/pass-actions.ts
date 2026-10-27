@@ -18,16 +18,23 @@ export interface AdminGrantPassInput {
   phone: string;
   bundleId: string;
   payment: AdminPassPayment;
+  /** Complimentary only: how many credits to give (defaults to the bundle size). */
+  credits?: number;
 }
 
 export type AdminGrantPassResult =
   | { ok: true; passId: string; expiresAt: string | null; credits: number }
-  | { ok: false; reason: "unknown_bundle" | "error"; message?: string };
+  | {
+      ok: false;
+      reason: "unknown_bundle" | "invalid_credits" | "error";
+      message?: string;
+    };
 
 /**
  * Grant/sell a pass to a customer (for cash/offline sales or comps). A "paid"
  * pass records its price so it counts to revenue at purchase; "complimentary"
- * records £0. Expiry comes from the bundle's validity window.
+ * records £0 and may carry any number of credits (e.g. 2 as goodwill). Expiry
+ * comes from the bundle's validity window.
  */
 export async function adminGrantPass(
   input: AdminGrantPassInput,
@@ -36,6 +43,15 @@ export async function adminGrantPass(
 
   const bundle = tenant.bundles.find((b) => b.id === input.bundleId);
   if (!bundle) return { ok: false, reason: "unknown_bundle" };
+
+  // A paid pass is always the full bundle; a comp can be any size.
+  const credits =
+    input.payment === "complimentary" && input.credits !== undefined
+      ? input.credits
+      : bundle.sessions;
+  if (!Number.isInteger(credits) || credits < 1 || credits > 50) {
+    return { ok: false, reason: "invalid_credits" };
+  }
 
   const sb = createServiceClient();
   const priceMinor = input.payment === "paid" ? bundle.priceMinor : 0;
@@ -46,7 +62,7 @@ export async function adminGrantPass(
     p_email: input.email.trim(),
     p_phone: input.phone.trim(),
     p_bundle_id: bundle.id,
-    p_total_credits: bundle.sessions,
+    p_total_credits: credits,
     p_price_paid_minor: priceMinor,
     p_valid_months: bundle.validityMonths,
   });
@@ -59,7 +75,7 @@ export async function adminGrantPass(
     ok: true,
     passId: row.pass_id,
     expiresAt: row.expires_at,
-    credits: bundle.sessions,
+    credits,
   };
 }
 

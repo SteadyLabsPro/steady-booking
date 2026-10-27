@@ -23,6 +23,7 @@ export function SellPass() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [payment, setPayment] = useState<AdminPassPayment>("paid");
+  const [compCredits, setCompCredits] = useState("1");
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ credits: number; expiresAt: string | null } | null>(
     null,
@@ -38,6 +39,7 @@ export function SellPass() {
     setEmail("");
     setPhone("");
     setPayment("paid");
+    setCompCredits("1");
     setError(null);
     setDone(null);
   }
@@ -51,6 +53,9 @@ export function SellPass() {
     if (!firstName.trim() || !lastName.trim())
       return setError("Enter the customer's name.");
     if (!EMAIL_RE.test(email.trim())) return setError("Enter a valid email.");
+    const n = Number(compCredits);
+    if (payment === "complimentary" && !(Number.isInteger(n) && n >= 1 && n <= 50))
+      return setError("Enter a number of credits from 1 to 50.");
     setError(null);
 
     startTransition(async () => {
@@ -61,12 +66,15 @@ export function SellPass() {
         phone,
         bundleId: bundle.id,
         payment,
+        ...(payment === "complimentary" ? { credits: Number(compCredits) } : {}),
       });
       if (result.ok) {
         setDone({ credits: result.credits, expiresAt: result.expiresAt });
         router.refresh();
       } else if (result.reason === "unknown_bundle") {
         setError("Pass type not found.");
+      } else if (result.reason === "invalid_credits") {
+        setError("Enter a number of credits from 1 to 50.");
       } else {
         setError("Couldn't create the pass. Please try again.");
       }
@@ -129,8 +137,9 @@ export function SellPass() {
               <>
                 <div className="rounded-lg border border-border bg-subtle/60 p-3 text-sm">
                   <p className="font-medium">
-                    {bundle.sessions}-visit pass ·{" "}
-                    {formatPrice(bundle.priceMinor, tenant.currency)}
+                    {payment === "complimentary"
+                      ? `Complimentary pass · ${formatPrice(0, tenant.currency)}`
+                      : `${bundle.sessions}-visit pass · ${formatPrice(bundle.priceMinor, tenant.currency)}`}
                   </p>
                   <p className="text-xs text-muted">
                     1 credit = 1 person-session · {expiryLabel}
@@ -190,8 +199,25 @@ export function SellPass() {
                       <span>{label}</span>
                     </label>
                   ))}
+                  {payment === "complimentary" && (
+                    <label className="flex items-center gap-2 pl-6 text-sm">
+                      <span>Credits</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        inputMode="numeric"
+                        value={compCredits}
+                        onChange={(e) => setCompCredits(e.target.value)}
+                        className={`${inputCls} h-9 w-20`}
+                      />
+                      <span className="text-xs text-muted">1 per person-session</span>
+                    </label>
+                  )}
                   <p className="text-xs text-muted">
                     &ldquo;Paid&rdquo; counts to revenue at today&rsquo;s date.
+                    &ldquo;Complimentary&rdquo; is free and can be any number of
+                    credits.
                   </p>
                 </fieldset>
 
