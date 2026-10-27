@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { tenant } from "@/config/tenant.config";
-import { formatPrice, formatSessionDate, formatSessionTime } from "@/engine";
+import {
+  formatPrice,
+  formatSessionDate,
+  formatSessionTime,
+  sessionDateKey,
+} from "@/engine";
 import { Badge, type BadgeTone } from "@/components/admin/badge";
 import { CancelBookingButton } from "@/components/admin/cancel-booking-button";
+import { PassAdjustments } from "@/components/admin/pass-adjustments";
 import { getAdminPass, type AdminPassStatus } from "@/lib/admin/passes";
 
 // Live pass data — never cache.
@@ -70,7 +76,7 @@ export default async function PassDetailPage({
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Tile
           label="Credits left"
-          value={`${pass.remainingCredits} of ${pass.totalCredits}`}
+          value={`${pass.remainingCredits} of ${pass.totalCredits + pass.bonusCredits}`}
         />
         <Tile label="Used" value={String(pass.usedCredits)} />
         <Tile label="Paid" value={formatPrice(pass.priceMinor, tenant.currency)} />
@@ -79,6 +85,27 @@ export default async function PassDetailPage({
           value={pass.expiresAt ? formatSessionDate(pass.expiresAt, tz) : "—"}
         />
       </div>
+      {(pass.bonusCredits > 0 || pass.refundedMinor > 0) && (
+        <p className="-mt-4 text-xs text-muted">
+          {pass.bonusCredits > 0 &&
+            `Includes ${pass.bonusCredits} goodwill credit${pass.bonusCredits === 1 ? "" : "s"} added by staff. `}
+          {pass.refundedMinor > 0 &&
+            `${formatPrice(pass.refundedMinor, tenant.currency)} refunded.`}
+        </p>
+      )}
+
+      {pass.status !== "refunded" && (
+        <PassAdjustments
+          passId={pass.id}
+          expiryKey={pass.expiresAt ? sessionDateKey(pass.expiresAt, tz) : ""}
+          todayKey={sessionDateKey(new Date().toISOString(), tz)}
+          unusedRefundMinor={pass.unusedRefundMinor}
+          unusedPaidCredits={Math.min(
+            pass.totalCredits,
+            Math.max(0, pass.remainingCredits - pass.bonusCredits),
+          )}
+        />
+      )}
 
       <div className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">

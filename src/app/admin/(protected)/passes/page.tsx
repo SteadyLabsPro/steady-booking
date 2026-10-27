@@ -82,7 +82,7 @@ export default async function PassesPage({
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-sm font-medium tabular-nums">
-                  {p.usedCredits} of {p.totalCredits} used ·{" "}
+                  {p.usedCredits} of {p.totalCredits + p.bonusCredits} used ·{" "}
                   <span className="text-accent">{p.remainingCredits} remain</span>
                 </span>
                 {p.expiresAt && (

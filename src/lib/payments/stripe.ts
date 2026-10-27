@@ -150,12 +150,16 @@ export function refundForEvent(event: Stripe.Event): RefundInfo | null {
   };
 }
 
-/** Refund a payment in full (used by the admin cancel-and-refund action).
- * Returns the refund id (re_…). */
+/** Refund a payment — in full, or `amountMinor` of it (used by the admin
+ * refund actions). Returns the refund id (re_…). */
 export async function createRefund(
   paymentIntentId: string,
+  amountMinor?: number,
 ): Promise<string | null> {
-  const r = await stripe().refunds.create({ payment_intent: paymentIntentId });
+  const r = await stripe().refunds.create({
+    payment_intent: paymentIntentId,
+    ...(amountMinor ? { amount: amountMinor } : {}),
+  });
   return r.id ?? null;
 }
 

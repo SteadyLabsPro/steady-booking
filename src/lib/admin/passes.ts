@@ -13,11 +13,18 @@ export interface AdminPass {
   customerName: string;
   email: string;
   phone: string;
+  /** Credits paid for (the bundle size). */
   totalCredits: number;
+  /** Goodwill credits added by staff on top of the purchase. */
+  bonusCredits: number;
   remainingCredits: number;
   usedCredits: number;
   priceMinor: number;
   refundedMinor: number;
+  /** Bought by card online, so Stripe refunds are possible. */
+  hasCardPayment: boolean;
+  /** What "refund unused credits" would pay back now, in minor units. */
+  unusedRefundMinor: number;
   purchasedAt: string;
   expiresAt: string | null;
   status: AdminPassStatus;
@@ -36,19 +43,43 @@ export interface AdminPassDetail extends AdminPass {
   bookings: AdminPassBooking[];
 }
 
+/**
+ * Money owed back for a pass's unused, paid-for credits, pro rata to the price
+ * paid. Goodwill (bonus) credits are treated as spent last and never refunded,
+ * so e.g. 11 left on a 10-credit £80 pass with 2 bonus → 9 paid unused → £72.
+ * Capped at what hasn't already been refunded.
+ */
+export function unusedPaidRefundMinor(p: {
+  totalCredits: number;
+  remainingCredits: number;
+  bonusCredits: number;
+  priceMinor: number;
+  refundedMinor: number;
+}): number {
+  if (p.totalCredits <= 0 || p.priceMinor <= 0) return 0;
+  const unusedPaid = Math.min(
+    p.totalCredits,
+    Math.max(0, p.remainingCredits - p.bonusCredits),
+  );
+  const owed = Math.round((p.priceMinor * unusedPaid) / p.totalCredits);
+  return Math.max(0, Math.min(owed, p.priceMinor - p.refundedMinor));
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** Shape one raw passes row (with embedded customer) into an AdminPass. */
 function derivePass(p: any): AdminPass {
   const c = p.customers ?? {};
   const total = p.total_credits ?? 0;
+  const bonus = p.bonus_credits ?? 0;
   const remaining = p.remaining_credits ?? 0;
   const price = p.price_paid_minor ?? 0;
   const refunded = p.refunded_minor ?? 0;
   const expired = p.expires_at
     ? new Date(p.expires_at).getTime() < Date.now()
     : false;
+  // Fully refunded, or part-refunded with its credits voided.
   const status: AdminPassStatus =
-    refunded >= price && price > 0
+    refunded > 0 && (refunded >= price || remaining <= 0)
       ? "refunded"
       : remaining <= 0
         ? "used"
@@ -61,10 +92,21 @@ function derivePass(p: any): AdminPass {
     email: c.email ?? "",
     phone: c.phone ?? "",
     totalCredits: total,
+    bonusCredits: bonus,
     remainingCredits: remaining,
-    usedCredits: total - remaining,
+    usedCredits: Math.max(0, total + bonus - remaining),
     priceMinor: price,
     refundedMinor: refunded,
+    hasCardPayment: !!p.payment_intent_id,
+    unusedRefundMinor: p.payment_intent_id
+      ? unusedPaidRefundMinor({
+          totalCredits: total,
+          remainingCredits: remaining,
+          bonusCredits: bonus,
+          priceMinor: price,
+          refundedMinor: refunded,
+        })
+      : 0,
     purchasedAt: p.created_at,
     expiresAt: p.expires_at ?? null,
     status,
@@ -73,7 +115,7 @@ function derivePass(p: any): AdminPass {
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 const PASS_SELECT =
-  "id, total_credits, remaining_credits, price_paid_minor, refunded_minor, created_at, expires_at, customers(first_name, last_name, email, phone)";
+  "id, total_credits, bonus_credits, remaining_credits, price_paid_minor, refunded_minor, payment_intent_id, created_at, expires_at, customers(first_name, last_name, email, phone)";
 
 /** All passes, newest first, with credits used/remaining and a derived status. */
 export async function getAdminPasses(): Promise<AdminPass[]> {
